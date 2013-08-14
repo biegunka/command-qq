@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 -- | QuasiQuoters
 module System.Shell.QQ
-  ( sh
+  ( sh, shell
   , Eval(..), Embed(..)
   ) where
 
@@ -22,7 +22,7 @@ import qualified System.Process as Proc
 -- >>> :set -XQuasiQuotes
 
 
--- | QuasiQuoter for shell scripts
+-- | QuasiQuoter for shell scripts in default shell
 --
 -- Works only for expressions (obviously)
 --
@@ -33,15 +33,15 @@ import qualified System.Process as Proc
 --       sh quasiquoter does not support splicing types
 --       Code: quoteType sh "blah"
 sh :: QuasiQuoter
-sh = QuasiQuoter
-  { quoteExp  = quoteShellExp
-  , quotePat  = failure "patterns"
-  , quoteType = failure "types"
-  , quoteDec  = failure "declarations"
-  }
- where
-  failure kind =
-    fail $ "sh quasiquoter does not support splicing " ++ kind
+sh = expQuoter (quoteShellExp Nothing)
+
+-- | QuasiQuoter for shell scripts in provided shell
+--
+-- -- >>> let bash = shell "/bin/bash"
+-- -- >>> [bash|echo $0|]
+-- -- /bin/bash
+shell :: FilePath -> QuasiQuoter
+shell path = expQuoter (quoteShellExp (Just path))
 
 
 -- | Different interesting return types for 'sh' QuasiQuoter
@@ -159,10 +159,22 @@ instance Embed String where
   embed = id
 
 
+-- | Generic quasiquoter for shell calls
+expQuoter :: (String -> Q Exp) -> QuasiQuoter
+expQuoter quote = QuasiQuoter
+  { quoteExp  = quote
+  , quotePat  = failure "patterns"
+  , quoteType = failure "types"
+  , quoteDec  = failure "declarations"
+  }
+ where
+  failure kind =
+    fail $ "this quasiquoter does not support splicing " ++ kind
+
 -- | Construct shell call
-quoteShellExp :: String -> Q Exp
-quoteShellExp s = do
-  shellEx <- runIO $ getEnvDefault "SHELL" "/bin/sh"
+quoteShellExp :: Maybe FilePath -> String -> Q Exp
+quoteShellExp path s = do
+  shellEx <- runIO $ maybe (getEnvDefault "SHELL" "/bin/sh") return path
   [e| eval shellEx ["-c", $(string2exp s)] |]
 
 -- | Parse references to Haskell variables
