@@ -3,6 +3,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
 -- | Quasiquoters for shell commands
 module System.Shell.QQ
   ( sh, shell
@@ -22,17 +23,26 @@ import qualified System.Process as Proc
 
 -- | QuasiQuoter for shell commands in default shell
 --
+-- \"default\" here means it uses value of @SHELL@ environment variable
+-- or @\/bin\/sh@ if it is not set.
+--
 -- >>> [sh|echo "hi!"|] :: IO ExitCode
 -- hi!
 -- ExitSuccess
 -- >>> [sh|echo "hi!"|] :: IO String
 -- "hi!\n"
 --
+-- Haskell values can be embedded with Ruby-like syntax:
+--
+-- >>> let n = 7
+-- >>> [sh|echo "#{n} apples!"|] :: IO String
+-- "7 apples!\n"
+--
 -- Works only for expressions (obviously):
 --
 -- >>> return 3 :: IO [sh|blah|]
 -- <BLANKLINE>
--- <interactive>:28:16:
+-- <interactive>:32:16:
 --     Exception when trying to run compile-time code:
 --       this quasiquoter does not support splicing types
 --       Code: quoteType sh "blah"
@@ -40,10 +50,6 @@ sh :: QuasiQuoter
 sh = expQuoter (quoteShellExp Nothing)
 
 -- | QuasiQuoter for shell commands in provided shell
---
--- @
--- [bash|echo $0|] => \/bin\/bash
--- @
 shell :: FilePath -> QuasiQuoter
 shell path = expQuoter (quoteShellExp (Just path))
 
@@ -95,7 +101,7 @@ instance
 -- | Return exit code, stdout, and stderr of shell process
 -- and consume stdin from supplied 'String'
 --
--- >>> [sh|while read line; do echo \${#line}; done|] "hello\nworld\n"
+-- >>> [sh|while read line; do echo ${#line}; done|] "hello\nworld\n"
 -- (ExitSuccess,"5\n5\n","")
 instance
   ( input  ~ String
@@ -183,11 +189,12 @@ quoteShellExp path s = do
 -- | Parse references to Haskell variables
 string2exp :: String -> Q Exp
 string2exp = raw where
-  raw ('\\':'$':xs) = [e| '$' : $(raw xs) |]
-  raw ('$':'{':xs)  = [e| $(var xs) |]
-  raw (x  :xs)      = [e| x : $(raw xs) |]
-  raw []            = [e| [] |]
+  raw (break (== '#') -> parts) = case parts of
+    (before, '#':'{':after) -> [e| before ++ $(var after)|]
+    (before, '#':after)     -> [e| before ++ '#' : $(raw after)|]
+    (before, [])            -> [e| before |]
+    _ -> fail $ "Should never happen"
 
-  var xs = case break (== '}') xs of
-    (name, '}':ys) -> [e| embed $(return (VarE (mkName name))) ++ $(raw ys) |]
-    (name, _)      -> fail $ "Bad variable pattern: ${" ++ name
+  var (break (== '}') -> parts) = case parts of
+     (before, '}':after) -> [e| embed $(return (VarE (mkName before))) ++ $(raw after) |]
+     (before, _)         -> fail $ "Bad variable pattern: #{" ++ before

@@ -1,5 +1,5 @@
 -- | Module to bypass GHC stage restrictions for quasiquoters
-module ShellSpecQQ
+module CustomSpecQQ
   ( binsh, binbash
   ) where
 

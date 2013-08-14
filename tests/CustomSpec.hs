@@ -1,9 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
-module ShellSpec where
+module CustomSpec where
 
 import Test.Hspec
 
-import ShellSpecQQ (binsh, binbash)
+import CustomSpecQQ (binsh, binbash)
 
 
 spec :: Spec
