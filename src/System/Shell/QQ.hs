@@ -1,4 +1,4 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -11,17 +11,19 @@ module System.Shell.QQ
   ) where
 
 import           Control.Applicative ((<$), pure)
+import           Data.Int
+import           Data.Word
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
 import           System.Exit (ExitCode)
 import           System.Posix.Env (getEnvDefault)
-import qualified System.Process as Proc
+import qualified System.Process as P
 
 -- $setup
 -- >>> :set -XQuasiQuotes
 
 
--- | QuasiQuoter for shell commands in default shell
+-- | Quasiquoter for default shell
 --
 -- \"default\" here means it uses value of @SHELL@ environment variable
 -- or @\/bin\/sh@ if it is not set.
@@ -49,7 +51,17 @@ import qualified System.Process as Proc
 sh :: QuasiQuoter
 sh = expQuoter (quoteShellExp Nothing)
 
--- | QuasiQuoter for shell commands in provided shell
+-- | Quasiquoters maker. For example, you can make quasiquoter for @\/bin\/bash@:
+--
+-- @
+-- let bash = shell \"\/bin\/bash\"
+-- [bash|echo hello|]
+-- @
+--
+-- (Well, declaration and usage should be in different modules.)
+--
+-- Quasiquoter made that way never looks at @SHELL@ environment
+-- variable but otherwise behaves exactly like 'sh'
 shell :: FilePath -> QuasiQuoter
 shell path = expQuoter (quoteShellExp (Just path))
 
@@ -67,7 +79,7 @@ class Eval r where
 -- >>> [sh|echo hello world|] :: IO ()
 -- hello world
 instance Eval (IO ()) where
-  eval command args = () <$ Proc.rawSystem command args
+  eval command args = () <$ P.rawSystem command args
 
 -- | Return only exit code of shell process
 --
@@ -78,14 +90,14 @@ instance Eval (IO ()) where
 -- >>> [sh|exit 1|] :: IO ExitCode
 -- ExitFailure 1
 instance Eval (IO ExitCode) where
-  eval command args = Proc.rawSystem command args
+  eval command args = P.rawSystem command args
 
 -- | Return only stdout of shell process
 --
 -- >>> [sh|echo hello world|] :: IO String
 -- "hello world\n"
 instance Eval (IO String) where
-  eval command args = Proc.readProcess command args ""
+  eval command args = P.readProcess command args ""
 
 -- | Return exit code, stdout, and stderr of shell process
 --
@@ -96,24 +108,21 @@ instance
   , out    ~ String
   , err    ~ String
   ) => Eval (IO (status, out, err)) where
-  eval command args = Proc.readProcessWithExitCode command args ""
+  eval command args = P.readProcessWithExitCode command args ""
 
 -- | Return exit code, stdout, and stderr of shell process
 -- and consume stdin from supplied 'String'
 --
--- >>> [sh|while read line; do echo ${#line}; done|] "hello\nworld\n"
--- (ExitSuccess,"5\n5\n","")
+-- >>> [sh|while read line; do echo ${#line}; done|] "hello\nworld!\n"
+-- (ExitSuccess,"5\n6\n","")
 instance
   ( input  ~ String
   , output ~ IO (ExitCode, String, String)
   ) => Eval (input -> output) where
-  eval command args stdin = Proc.readProcessWithExitCode command args stdin
+  eval command args stdin = P.readProcessWithExitCode command args stdin
 
 
 -- | Embed haskell values into shell scripts
---
--- Instances provided for all "Prelude" data types for
--- which it makes sense
 --
 -- I recommend using @-XExtendedDefaultRules@ for modules
 -- where you want to embed values, it would save for annoying
@@ -124,6 +133,8 @@ instance
 -- @
 class Embed a where
   embed :: a -> String
+  default embed :: Show a => a -> String
+  embed = show
 
 -- |
 -- >>> embed 4
@@ -131,20 +142,26 @@ class Embed a where
 --
 -- >>> embed (7 :: Integer)
 -- "7"
-instance Embed Integer where
-  embed = show
+instance Embed Integer
 
 -- |
 -- >>> embed (7 :: Int)
 -- "7"
-instance Embed Int where
-  embed = show
+instance Embed Int
+instance Embed Int8
+instance Embed Int16
+instance Embed Int32
+instance Embed Int64
+instance Embed Word
+instance Embed Word8
+instance Embed Word16
+instance Embed Word32
+instance Embed Word64
 
 -- |
 -- >>> embed (7 :: Float)
 -- "7.0"
-instance Embed Float where
-  embed = show
+instance Embed Float
 
 -- |
 -- >>> embed 4.0
@@ -152,8 +169,7 @@ instance Embed Float where
 --
 -- >>> embed (7 :: Double)
 -- "7.0"
-instance Embed Double where
-  embed = show
+instance Embed Double
 
 -- |
 -- >>> embed 'c'
