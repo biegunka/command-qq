@@ -17,3 +17,11 @@ library
                        unix
   hs-source-dirs:      src
   exposed-modules:     System.Shell.QQ
+
+test-suite doctests
+  default-language:    Haskell2010
+  type:                exitcode-stdio-1.0
+  build-depends:       base == 4.*,
+                       doctest
+  hs-source-dirs:      tests
+  main-is:             Doctests.hs
