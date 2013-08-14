@@ -22,11 +22,17 @@ import qualified System.Process as Proc
 
 -- | QuasiQuoter for shell commands in default shell
 --
--- Works only for expressions (obviously)
+-- >>> [sh|echo "hi!"|] :: IO ExitCode
+-- hi!
+-- ExitSuccess
+-- >>> [sh|echo "hi!"|] :: IO String
+-- "hi!\n"
+--
+-- Works only for expressions (obviously):
 --
 -- >>> return 3 :: IO [sh|blah|]
 -- <BLANKLINE>
--- <interactive>:24:16:
+-- <interactive>:28:16:
 --     Exception when trying to run compile-time code:
 --       this quasiquoter does not support splicing types
 --       Code: quoteType sh "blah"
@@ -35,19 +41,18 @@ sh = expQuoter (quoteShellExp Nothing)
 
 -- | QuasiQuoter for shell commands in provided shell
 --
--- -- >>> let bash = shell "/bin/bash"
--- -- >>> [bash|echo $0|]
--- -- /bin/bash
+-- @
+-- [bash|echo $0|] => \/bin\/bash
+-- @
 shell :: FilePath -> QuasiQuoter
 shell path = expQuoter (quoteShellExp (Just path))
 
 
--- | Different interesting return types for 'sh' QuasiQuoter
+-- | Different interesting return types for quasiquoters
 --
 -- Instances mostly resemble the types of things in "System.Process"
 --
--- 'eval' is not supposed to be used directly, user is expected to use
--- 'sh' quasiquoter instead
+-- 'eval' is not supposed to be used directly, use quasiquoters instead
 class Eval r where
   eval :: String -> [String] -> r
 
@@ -64,7 +69,7 @@ instance Eval (IO ()) where
 -- hello world
 -- ExitSuccess
 --
--- >>> [sh|return 1|] :: IO ExitCode
+-- >>> [sh|exit 1|] :: IO ExitCode
 -- ExitFailure 1
 instance Eval (IO ExitCode) where
   eval command args = Proc.rawSystem command args
@@ -78,7 +83,7 @@ instance Eval (IO String) where
 
 -- | Return exit code, stdout, and stderr of shell process
 --
--- >>> [sh|echo hello world; echo bye world >&2; return 1|] :: IO (ExitCode, String, String)
+-- >>> [sh|echo hello world; echo bye world >&2; exit 1|] :: IO (ExitCode, String, String)
 -- (ExitFailure 1,"hello world\n","bye world\n")
 instance
   ( status ~ ExitCode
