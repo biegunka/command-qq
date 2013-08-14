@@ -1,11 +1,9 @@
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeSynonymInstances #-}
--- | QuasiQuoters
+-- | Quasiquoters for shell commands
 module System.Shell.QQ
   ( sh, shell
   , Eval(..), Embed(..)
@@ -22,7 +20,7 @@ import qualified System.Process as Proc
 -- >>> :set -XQuasiQuotes
 
 
--- | QuasiQuoter for shell scripts in default shell
+-- | QuasiQuoter for shell commands in default shell
 --
 -- Works only for expressions (obviously)
 --
@@ -30,12 +28,12 @@ import qualified System.Process as Proc
 -- <BLANKLINE>
 -- <interactive>:24:16:
 --     Exception when trying to run compile-time code:
---       sh quasiquoter does not support splicing types
+--       this quasiquoter does not support splicing types
 --       Code: quoteType sh "blah"
 sh :: QuasiQuoter
 sh = expQuoter (quoteShellExp Nothing)
 
--- | QuasiQuoter for shell scripts in provided shell
+-- | QuasiQuoter for shell commands in provided shell
 --
 -- -- >>> let bash = shell "/bin/bash"
 -- -- >>> [bash|echo $0|]

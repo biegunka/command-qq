@@ -1,6 +1,6 @@
 name:                shell-qq
 version:             0.1.0.0
-synopsis:            Shell commands quasiquoter
+synopsis:            Quasiquoters for shell commands
 license:             BSD3
 license-file:        LICENSE
 author:              Matvey Aksenov
@@ -25,3 +25,14 @@ test-suite doctests
                        doctest
   hs-source-dirs:      tests
   main-is:             Doctests.hs
+
+test-suite spec
+  default-language:    Haskell2010
+  type:                exitcode-stdio-1.0
+  build-depends:       base == 4.*,
+                       hspec,
+                       shell-qq,
+                       template-haskell
+  hs-source-dirs:      tests
+  main-is:             Spec.hs
+  other-modules:       ShellSpec
