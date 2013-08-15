@@ -17,7 +17,7 @@ ExitSuccess
 </pre><p>Works only for expressions (obviously):
 </p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>return 3 :: IO [sh|blah|]
 </code></strong>
-&lt;interactive&gt;:32:16:
+&lt;interactive&gt;:74:16:
     Exception when trying to run compile-time code:
       this quasiquoter does not support splicing types
       Code: quoteType sh &quot;blah&quot;
@@ -49,11 +49,11 @@ ExitSuccess
 ExitSuccess
 </pre><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>[sh|exit 1|] :: IO ExitCode
 </code></strong>ExitFailure 1
-</pre></td></tr><tr><td class="src">(~ * i <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, ~ * o (<a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/System-IO.html#t:IO">IO</a> (<a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/System-Exit.html#t:ExitCode">ExitCode</a>, <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>))) =&gt; <a href="System-Shell-QQ.html#t:Eval">Eval</a> (i -&gt; o)</td><td class="doc"><p>Return exit code, stdout, and stderr of shell process
+</pre></td></tr><tr><td class="src">(~ * i <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, ~ * o (<a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/System-Exit.html#t:ExitCode">ExitCode</a>, <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>)) =&gt; <a href="System-Shell-QQ.html#t:Eval">Eval</a> (i -&gt; <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/System-IO.html#t:IO">IO</a> o)</td><td class="doc"><p>Return exit code, stdout, and stderr of shell process
  and consume stdin from supplied <code><a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a></code>
 </p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>[sh|while read line; do echo ${#line}; done|] &quot;hello\nworld!\n&quot;
 </code></strong>(ExitSuccess,&quot;5\n6\n&quot;,&quot;&quot;)
-</pre></td></tr></table></div></div></div><div class="top"><p class="src"><span class="keyword">class</span>  <a name="t:Embed" class="def">Embed</a> a  <span class="keyword">where</span><a href="src/System-Shell-QQ.html#Embed" class="link">Source</a></p><div class="doc"><p>Embed haskell values into shell scripts
+</pre></td></tr><tr><td class="src">(~ * i <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, ~ * o <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, <a href="/home/maksenov/git/shell-qq/.cabal-sandbox/share/doc/x86_64-linux-ghc-7.6.2/transformers-0.3.0.0/html/Control-Monad-IO-Class.html#t:MonadIO">MonadIO</a> m) =&gt; <a href="System-Shell-QQ.html#t:Eval">Eval</a> (i -&gt; <a href="System-Shell-QQ-ShellT.html#t:ShellT">ShellT</a> m o)</td><td class="doc empty">&nbsp;</td></tr><tr><td class="src">(~ * o <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, <a href="/home/maksenov/git/shell-qq/.cabal-sandbox/share/doc/x86_64-linux-ghc-7.6.2/transformers-0.3.0.0/html/Control-Monad-IO-Class.html#t:MonadIO">MonadIO</a> m) =&gt; <a href="System-Shell-QQ.html#t:Eval">Eval</a> (<a href="System-Shell-QQ-ShellT.html#t:ShellT">ShellT</a> m o)</td><td class="doc empty">&nbsp;</td></tr></table></div></div></div><div class="top"><p class="src"><span class="keyword">class</span>  <a name="t:Embed" class="def">Embed</a> a  <span class="keyword">where</span><a href="src/System-Shell-QQ.html#Embed" class="link">Source</a></p><div class="doc"><p>Embed haskell values into shell scripts
 </p><p>I recommend using <code>-XExtendedDefaultRules</code> for modules
  where you want to embed values, it would save for annoying
  type annotations for numeric literals

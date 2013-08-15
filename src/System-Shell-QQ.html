@@ -53,7 +53,7 @@
 <a name="line-44"></a><span class='hs-comment'>--</span>
 <a name="line-45"></a><span class='hs-comment'>-- &gt;&gt;&gt; return 3 :: IO [sh|blah|]</span>
 <a name="line-46"></a><span class='hs-comment'>-- &lt;BLANKLINE&gt;</span>
-<a name="line-47"></a><span class='hs-comment'>-- &lt;interactive&gt;:32:16:</span>
+<a name="line-47"></a><span class='hs-comment'>-- &lt;interactive&gt;:74:16:</span>
 <a name="line-48"></a><span class='hs-comment'>--     Exception when trying to run compile-time code:</span>
 <a name="line-49"></a><span class='hs-comment'>--       this quasiquoter does not support splicing types</span>
 <a name="line-50"></a><span class='hs-comment'>--       Code: quoteType sh "blah"</span>
@@ -126,15 +126,15 @@
 <a name="line-117"></a>  <span class='hs-layout'>)</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Eval</span> <span class='hs-layout'>(</span><span class='hs-conid'>IO</span> <span class='hs-layout'>(</span><span class='hs-varid'>s</span><span class='hs-layout'>,</span> <span class='hs-varid'>o</span><span class='hs-layout'>,</span> <span class='hs-varid'>e</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
 <a name="line-118"></a>  <span class='hs-varid'>eval</span> <span class='hs-varid'>command</span> <span class='hs-varid'>args</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>P</span><span class='hs-varop'>.</span><span class='hs-varid'>readProcessWithExitCode</span> <span class='hs-varid'>command</span> <span class='hs-varid'>args</span> <span class='hs-str'>""</span>
 <a name="line-119"></a>
-<a name="line-120"></a><a name="instance%20Eval%20(i%20-%3e%20o)"></a><span class='hs-comment'>-- | Return exit code, stdout, and stderr of shell process</span>
-<a name="line-121"></a><a name="instance%20Eval%20(i%20-%3e%20o)"></a><span class='hs-comment'>-- and consume stdin from supplied 'String'</span>
-<a name="line-122"></a><a name="instance%20Eval%20(i%20-%3e%20o)"></a><span class='hs-comment'>--</span>
-<a name="line-123"></a><a name="instance%20Eval%20(i%20-%3e%20o)"></a><span class='hs-comment'>-- &gt;&gt;&gt; [sh|while read line; do echo ${#line}; done|] "hello\nworld!\n"</span>
-<a name="line-124"></a><a name="instance%20Eval%20(i%20-%3e%20o)"></a><span class='hs-comment'>-- (ExitSuccess,"5\n6\n","")</span>
-<a name="line-125"></a><a name="instance%20Eval%20(i%20-%3e%20o)"></a><span class='hs-keyword'>instance</span>
-<a name="line-126"></a>  <span class='hs-layout'>(</span> <span class='hs-varid'>i</span>  <span class='hs-keyglyph'>~</span> <span class='hs-conid'>String</span>
-<a name="line-127"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>o</span> <span class='hs-keyglyph'>~</span> <span class='hs-conid'>IO</span> <span class='hs-layout'>(</span><span class='hs-conid'>ExitCode</span><span class='hs-layout'>,</span> <span class='hs-conid'>String</span><span class='hs-layout'>,</span> <span class='hs-conid'>String</span><span class='hs-layout'>)</span>
-<a name="line-128"></a>  <span class='hs-layout'>)</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Eval</span> <span class='hs-layout'>(</span><span class='hs-varid'>i</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>o</span><span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-120"></a><a name="instance%20Eval%20(i%20-%3e%20IO%20o)"></a><span class='hs-comment'>-- | Return exit code, stdout, and stderr of shell process</span>
+<a name="line-121"></a><a name="instance%20Eval%20(i%20-%3e%20IO%20o)"></a><span class='hs-comment'>-- and consume stdin from supplied 'String'</span>
+<a name="line-122"></a><a name="instance%20Eval%20(i%20-%3e%20IO%20o)"></a><span class='hs-comment'>--</span>
+<a name="line-123"></a><a name="instance%20Eval%20(i%20-%3e%20IO%20o)"></a><span class='hs-comment'>-- &gt;&gt;&gt; [sh|while read line; do echo ${#line}; done|] "hello\nworld!\n"</span>
+<a name="line-124"></a><a name="instance%20Eval%20(i%20-%3e%20IO%20o)"></a><span class='hs-comment'>-- (ExitSuccess,"5\n6\n","")</span>
+<a name="line-125"></a><a name="instance%20Eval%20(i%20-%3e%20IO%20o)"></a><span class='hs-keyword'>instance</span>
+<a name="line-126"></a>  <span class='hs-layout'>(</span> <span class='hs-varid'>i</span> <span class='hs-keyglyph'>~</span> <span class='hs-conid'>String</span>
+<a name="line-127"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>o</span> <span class='hs-keyglyph'>~</span> <span class='hs-layout'>(</span><span class='hs-conid'>ExitCode</span><span class='hs-layout'>,</span> <span class='hs-conid'>String</span><span class='hs-layout'>,</span> <span class='hs-conid'>String</span><span class='hs-layout'>)</span>
+<a name="line-128"></a>  <span class='hs-layout'>)</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Eval</span> <span class='hs-layout'>(</span><span class='hs-varid'>i</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>IO</span> <span class='hs-varid'>o</span><span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
 <a name="line-129"></a>  <span class='hs-varid'>eval</span> <span class='hs-varid'>command</span> <span class='hs-varid'>args</span> <span class='hs-varid'>stdin</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>P</span><span class='hs-varop'>.</span><span class='hs-varid'>readProcessWithExitCode</span> <span class='hs-varid'>command</span> <span class='hs-varid'>args</span> <span class='hs-varid'>stdin</span>
 <a name="line-130"></a>
 <a name="line-131"></a>
