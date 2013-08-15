@@ -94,20 +94,27 @@ instance Eval (IO ExitCode) where
 
 -- | Return only stdout of shell process
 --
+-- Does not care if shell process failed.
+--
 -- >>> [sh|echo hello world|] :: IO String
 -- "hello world\n"
+--
+-- >>> [sh|echo hello world; return 1|] :: IO String
+-- "hello world\n"
 instance Eval (IO String) where
-  eval command args = P.readProcess command args ""
+  eval command args = do
+    (_, out, _) <- eval command args
+    return out
 
 -- | Return exit code, stdout, and stderr of shell process
 --
 -- >>> [sh|echo hello world; echo bye world >&2; exit 1|] :: IO (ExitCode, String, String)
 -- (ExitFailure 1,"hello world\n","bye world\n")
 instance
-  ( status ~ ExitCode
-  , out    ~ String
-  , err    ~ String
-  ) => Eval (IO (status, out, err)) where
+  ( s ~ ExitCode
+  , o ~ String
+  , e ~ String
+  ) => Eval (IO (s, o, e)) where
   eval command args = P.readProcessWithExitCode command args ""
 
 -- | Return exit code, stdout, and stderr of shell process
@@ -116,9 +123,9 @@ instance
 -- >>> [sh|while read line; do echo ${#line}; done|] "hello\nworld!\n"
 -- (ExitSuccess,"5\n6\n","")
 instance
-  ( input  ~ String
-  , output ~ IO (ExitCode, String, String)
-  ) => Eval (input -> output) where
+  ( i  ~ String
+  , o ~ IO (ExitCode, String, String)
+  ) => Eval (i -> o) where
   eval command args stdin = P.readProcessWithExitCode command args stdin
 
 
