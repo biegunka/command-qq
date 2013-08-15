@@ -44,7 +44,7 @@ import qualified System.Process as P
 --
 -- >>> return 3 :: IO [sh|blah|]
 -- <BLANKLINE>
--- <interactive>:32:16:
+-- <interactive>:74:16:
 --     Exception when trying to run compile-time code:
 --       this quasiquoter does not support splicing types
 --       Code: quoteType sh "blah"
@@ -123,9 +123,9 @@ instance
 -- >>> [sh|while read line; do echo ${#line}; done|] "hello\nworld!\n"
 -- (ExitSuccess,"5\n6\n","")
 instance
-  ( i  ~ String
-  , o ~ IO (ExitCode, String, String)
-  ) => Eval (i -> o) where
+  ( i ~ String
+  , o ~ (ExitCode, String, String)
+  ) => Eval (i -> IO o) where
   eval command args stdin = P.readProcessWithExitCode command args stdin
 
 

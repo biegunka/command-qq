@@ -14,11 +14,14 @@ cabal-version:       >= 1.10
 library
   default-language:    Haskell2010
   build-depends:       base == 4.*,
+                       either,
                        process,
                        template-haskell,
+                       transformers,
                        unix
   hs-source-dirs:      src
   exposed-modules:     System.Shell.QQ
+                       System.Shell.QQ.ShellT
 
 test-suite doctests
   default-language:    Haskell2010
