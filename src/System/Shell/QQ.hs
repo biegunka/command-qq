@@ -4,9 +4,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
--- | Quasiquoters for shell commands
+-- | Quasiquoters for external commands
 module System.Shell.QQ
-  ( sh, shell
+  ( -- * Quasiquoters
+    sh, shell, interpreter
+    -- * For custom quasiquoters and stuff
+  , quoter, callCommand
   , Eval(..), Embed(..)
   ) where
 
@@ -49,28 +52,84 @@ import qualified System.Process as P
 --       this quasiquoter does not support splicing types
 --       Code: quoteType sh "blah"
 sh :: QuasiQuoter
-sh = expQuoter (quoteShellExp Nothing)
+sh = quoter $ \string -> do
+  shellEx <- runIO $ getEnvDefault "SHELL" "/bin/sh"
+  callCommand shellEx ["-c"] string
 
--- | Quasiquoters maker. For example, you can make quasiquoter for @\/bin\/bash@:
+-- | Shell commands quasiquoter maker
+--
+-- \"Shell\" here means something that implements the following interface:
 --
 -- @
--- let bash = shell \"\/bin\/bash\"
--- [bash|echo hello|]
+-- \<SHELL\> -c \<COMMAND\>
 -- @
 --
--- (Well, declaration and usage should be in different modules.)
+-- /e.g./ @sh@, @bash@, @zsh@, @ksh@, @tcsh@, @python@, etc
 --
--- Quasiquoter made that way never looks at @SHELL@ environment
--- variable but otherwise behaves exactly like 'sh'
+-- Everything that applies to 'sh' applies to 'shell'
 shell :: FilePath -> QuasiQuoter
-shell path = expQuoter (quoteShellExp (Just path))
+shell path = quoter (callCommand path ["-c"])
+
+-- | Interpreter commands quasiquoter maker
+--
+-- \"Interpreter\" here means something that implements the following interface:
+--
+-- @
+-- \<INTERPRETER\> -e \<COMMAND\>
+-- @
+--
+-- /e.g./ @perl@, @ruby@, @ghc@, etc
+--
+-- Everything that applies to 'sh' applies to 'interpreter'
+interpreter :: FilePath -> QuasiQuoter
+interpreter path = quoter (callCommand path ["-e"])
+
+
+-- | Construct quasiquoter from function taking the string
+-- and producing Haskell expression.
+--
+-- Other kinds of quasiquoters (patterns, types or
+-- declarations quasiquoters) will fail in compile time
+quoter :: (String -> Q Exp) -> QuasiQuoter
+quoter quote = QuasiQuoter
+  { quoteExp  = quote
+  , quotePat  = failure "patterns"
+  , quoteType = failure "types"
+  , quoteDec  = failure "declarations"
+  }
+ where
+  failure kind =
+    fail $ "this quasiquoter does not support splicing " ++ kind
+
+-- | Construct command call Haskell expression
+callCommand
+  :: FilePath -- ^ Command path
+  -> [String] -- ^ Arguments that go to command before quasiquoter contents
+  -> String   -- ^ Quasiquoter contents
+  -> Q Exp
+callCommand path args string =
+  [e| eval path (args ++ [$(string2exp string)]) |]
+
+-- | Parse references to Haskell variables
+string2exp :: String -> Q Exp
+string2exp = raw where
+  raw (break (== '#') -> parts) = case parts of
+    (before, '#':'{':after) -> [e| before ++ $(var after)|]
+    (before, '#':after)     -> [e| before ++ '#' : $(raw after)|]
+    (before, [])            -> [e| before |]
+    _ -> fail $ "Should never happen"
+
+  var (break (== '}') -> parts) = case parts of
+     (before, '}':after) -> [e| embed $(return (VarE (mkName before))) ++ $(raw after) |]
+     (before, _)         -> fail $ "Bad variable pattern: #{" ++ before
 
 
 -- | Different interesting return types for quasiquoters
 --
--- Instances mostly resemble the types of things in "System.Process"
+-- Instances here mostly resemble the types of things in "System.Process"
 --
--- 'eval' is not supposed to be used directly, use quasiquoters instead
+-- "System.Shell.QQ.ShellT" shows how to use 'Eval' to provide nice DSL
+-- for sequencing shell commands
 class Eval r where
   eval :: String -> [String] -> r
 
@@ -189,35 +248,3 @@ instance Embed Char where
 -- "hi"
 instance Embed String where
   embed = id
-
-
--- | Generic quasiquoter for shell calls
-expQuoter :: (String -> Q Exp) -> QuasiQuoter
-expQuoter quote = QuasiQuoter
-  { quoteExp  = quote
-  , quotePat  = failure "patterns"
-  , quoteType = failure "types"
-  , quoteDec  = failure "declarations"
-  }
- where
-  failure kind =
-    fail $ "this quasiquoter does not support splicing " ++ kind
-
--- | Construct shell call
-quoteShellExp :: Maybe FilePath -> String -> Q Exp
-quoteShellExp path s = do
-  shellEx <- runIO $ maybe (getEnvDefault "SHELL" "/bin/sh") return path
-  [e| eval shellEx ["-c", $(string2exp s)] |]
-
--- | Parse references to Haskell variables
-string2exp :: String -> Q Exp
-string2exp = raw where
-  raw (break (== '#') -> parts) = case parts of
-    (before, '#':'{':after) -> [e| before ++ $(var after)|]
-    (before, '#':after)     -> [e| before ++ '#' : $(raw after)|]
-    (before, [])            -> [e| before |]
-    _ -> fail $ "Should never happen"
-
-  var (break (== '}') -> parts) = case parts of
-     (before, '}':after) -> [e| embed $(return (VarE (mkName before))) ++ $(raw after) |]
-     (before, _)         -> fail $ "Bad variable pattern: #{" ++ before

@@ -3,13 +3,19 @@ module CustomSpec where
 
 import Test.Hspec
 
-import CustomSpecQQ (binsh, binbash)
+import CustomSpecQQ (sh, bash, ruby, perl)
 
 
 spec :: Spec
 spec =
   describe "custom shell quasiquoters" $ do
-    it "works correctly with /bin/sh quasiquoter" $
-      [binsh|echo -n $0|] `shouldReturn` "/bin/sh"
-    it "works correctly with /bin/bash quasiquoter" $
-      [binbash|echo -n $0|] `shouldReturn` "/bin/bash"
+    context "shells" $ do
+      it "works correctly with /bin/sh quasiquoter" $ do
+        [sh|echo $0|] `shouldReturn` "sh\n"
+      it "works correctly with /bin/bash quasiquoter" $
+        [bash|echo $0|] `shouldReturn` "bash\n"
+    context "interpreters" $ do
+      it "works correctly with /usr/bin/perl quasiquoter" $
+        [perl|print "perl" . "\n"|] `shouldReturn` "perl\n"
+      it "works correctly with /usr/bin/ruby quasiquoter" $
+        [ruby|puts "ruby"|] `shouldReturn` "ruby\n"
