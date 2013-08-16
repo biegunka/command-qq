@@ -5,7 +5,7 @@ module CustomSpecQQ
   ) where
 
 import           Language.Haskell.TH.Quote (QuasiQuoter)
-import qualified System.Shell.QQ as QQ
+import qualified System.Command.QQ as QQ
 
 
 -- Shells

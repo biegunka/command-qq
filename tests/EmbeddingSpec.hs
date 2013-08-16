@@ -3,7 +3,7 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 module EmbeddingSpec where
 
-import System.Shell.QQ
+import System.Command.QQ
 import Test.Hspec
 
 

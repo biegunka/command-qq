@@ -1,14 +1,16 @@
-# shell-qq
-[![Build Status](https://secure.travis-ci.org/biegunka/shell-qq.png?branch=master)](http://travis-ci.org/biegunka/shell-qq)
+# command-qq
+[![Build Status](https://secure.travis-ci.org/biegunka/command-qq.png?branch=master)](http://travis-ci.org/biegunka/command-qq)
+[![Build Status](https://drone.io/github.com/biegunka/command-qq/status.png)](https://drone.io/github.com/biegunka/command-qq/latest)
 
 ```
->>> putStrLn =<< unlines . reverse . lines <$> [sh|cowsay "Hello, I am shell-qq!"|]
+>>> import System.Command.QQ
+>>> putStrLn =<< unlines . reverse . lines <$> [sh|cowsay "Hello, I am command-qq!"|]
                 ||     ||
                 ||----w |
             (__)\       )\/\
          \  (oo)\_______
         \   ^__^
- -----------------------
-< Hello, I am shell-qq! >
- _______________________
+ -------------------------
+< Hello, I am command-qq! >
+ _________________________
 ```

@@ -5,10 +5,10 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 -- | Quasiquoters for external commands
-module System.Shell.QQ
+module System.Command.QQ
   ( -- * Quasiquoters
     sh, shell, interpreter
-    -- * For custom quasiquoters and stuff
+    -- * Customizations
   , quoter, callCommand
   , Eval(..), Embed(..)
   ) where
@@ -26,7 +26,7 @@ import qualified System.Process as P
 -- >>> :set -XQuasiQuotes
 
 
--- | Quasiquoter for default shell
+-- | Quasiquoter for the default shell
 --
 -- \"default\" here means it uses value of @SHELL@ environment variable
 -- or @\/bin\/sh@ if it is not set.
@@ -101,7 +101,7 @@ quoter quote = QuasiQuoter
   failure kind =
     fail $ "this quasiquoter does not support splicing " ++ kind
 
--- | Construct command call Haskell expression
+-- | Construct Haskell expression for external command call
 callCommand
   :: FilePath -- ^ Command path
   -> [String] -- ^ Arguments that go to command before quasiquoter contents
@@ -128,19 +128,19 @@ string2exp = raw where
 --
 -- Instances here mostly resemble the types of things in "System.Process"
 --
--- "System.Shell.QQ.ShellT" shows how to use 'Eval' to provide nice DSL
--- for sequencing shell commands
+-- "System.Command.QQ.CommandT" shows how to use 'Eval' to provide nice DSL
+-- for sequencing external commands
 class Eval r where
   eval :: String -> [String] -> r
 
--- | Most basic instance: nothing is known about what happened in shell
+-- | Most basic instance: nothing is known about what happened in external command
 --
 -- >>> [sh|echo hello world|] :: IO ()
 -- hello world
 instance Eval (IO ()) where
   eval command args = () <$ P.rawSystem command args
 
--- | Return only exit code of shell process
+-- | Return only exit code of external process
 --
 -- >>> [sh|echo hello world|] :: IO ExitCode
 -- hello world
@@ -151,9 +151,9 @@ instance Eval (IO ()) where
 instance Eval (IO ExitCode) where
   eval command args = P.rawSystem command args
 
--- | Return only stdout of shell process
+-- | Return only stdout of external process
 --
--- Does not care if shell process failed.
+-- Does not care if external process failed.
 --
 -- >>> [sh|echo hello world|] :: IO String
 -- "hello world\n"
@@ -165,7 +165,7 @@ instance Eval (IO String) where
     (_, out, _) <- eval command args
     return out
 
--- | Return exit code, stdout, and stderr of shell process
+-- | Return exit code, stdout, and stderr of external process
 --
 -- >>> [sh|echo hello world; echo bye world >&2; exit 1|] :: IO (ExitCode, String, String)
 -- (ExitFailure 1,"hello world\n","bye world\n")
@@ -176,7 +176,7 @@ instance
   ) => Eval (IO (s, o, e)) where
   eval command args = P.readProcessWithExitCode command args ""
 
--- | Return exit code, stdout, and stderr of shell process
+-- | Return exit code, stdout, and stderr of external process
 -- and consume stdin from supplied 'String'
 --
 -- >>> [sh|while read line; do echo ${#line}; done|] "hello\nworld!\n"
@@ -188,7 +188,7 @@ instance
   eval command args stdin = P.readProcessWithExitCode command args stdin
 
 
--- | Embed haskell values into shell scripts
+-- | Embed haskell values into external commands
 --
 -- I recommend using @-XExtendedDefaultRules@ for modules
 -- where you want to embed values, it would save for annoying
