@@ -114,9 +114,10 @@ callCommand path args string =
 string2exp :: String -> Q Exp
 string2exp = raw where
   raw (break (== '#') -> parts) = case parts of
-    (before, '#':'{':after) -> [e| before ++ $(var after)|]
-    (before, '#':after)     -> [e| before ++ '#' : $(raw after)|]
-    (before, [])            -> [e| before |]
+    (before, '#':'{' :after) -> [e| before ++ $(var after) |]
+    (before, '#':'\\':after) -> [e| before ++ '#' : $(raw after) |]
+    (before, '#':after)      -> [e| before ++ '#' : $(raw after) |]
+    (before, [])             -> [e| before |]
     _ -> fail $ "Should never happen"
 
   var (break (== '}') -> parts) = case parts of

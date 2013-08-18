@@ -26,4 +26,5 @@ spec = do
     it "is possible to write #{} in scripts still (as a comment)" $ do
       [sh|echo #\{n}|] `shouldReturn` "\n"
     it "is possible to write #{} in scripts still (as a string)" $ do
-      [sh|echo "#\{n}"|] `shouldReturn` "#\\{n}\n"
+      [sh|echo "#\{n}"|] `shouldReturn` "#{n}\n"
+      [sh|echo "#\\{n}"|] `shouldReturn` "#\\{n}\n"
