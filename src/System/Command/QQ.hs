@@ -128,9 +128,6 @@ string2exp = raw where
 -- | Different interesting return types for quasiquoters
 --
 -- Instances here mostly resemble the types of things in "System.Process"
---
--- "System.Command.QQ.CommandT" shows how to use 'Eval' to provide nice DSL
--- for sequencing external commands
 class Eval r where
   eval :: String -> [String] -> r
 

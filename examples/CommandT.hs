@@ -7,16 +7,20 @@
 --
 -- DSL does not use any custom quasiquoters but provides 'Eval'
 -- instances for custom datatypes that implement desired semantics
-module System.Command.QQ.CommandT where
+module CommandT where
 
-import Control.Applicative (Applicative(..), Alternative(..))
-import Control.Monad (MonadPlus(..))
-import Control.Monad.IO.Class (MonadIO(..))
-import Control.Monad.Trans.Class (MonadTrans(..))
-import Control.Monad.Trans.Either
-import Data.Monoid (Last(..))
-import System.Exit (ExitCode(..))
-import System.Command.QQ (Eval(..))
+import Control.Applicative                         -- base
+  ( Applicative(..), Alternative(..) )
+import Control.Monad (MonadPlus(..))               -- base
+import Control.Monad.IO.Class (MonadIO(..))        -- transformers
+import Control.Monad.Trans.Class (MonadTrans(..))  -- transformers
+import Control.Monad.Trans.Either                  -- either
+import Data.Functor.Alt (Alt(..))                  -- semigroupoids
+import Data.Functor.Apply (Apply(..))              -- semigroupoids
+import Data.Functor.Bind (Bind(..))                -- semigroupoids
+import Data.Monoid (Last(..))                      -- base
+import System.Exit (ExitCode(..))                  -- base
+import System.Command.QQ (Eval(..))                -- command-qq
 
 -- $setup
 -- >>> :set -XQuasiQuotes
@@ -24,7 +28,7 @@ import System.Command.QQ (Eval(..))
 -- >>> let lengths = [sh|while read line; do echo ${#line}; done|] :: String -> CommandT IO String
 
 
-infixl 1 >>!
+infixl 1 >>! -- same as >>=
 
 
 -- | External commands sequencing result
@@ -63,17 +67,26 @@ runCommandT = runEitherT . unCommandT
 instance Monad m => Functor (CommandT m) where
   fmap f (CommandT x) = CommandT (fmap f x)
 
+instance Monad m => Apply (CommandT m) where
+  CommandT f <.> CommandT x = CommandT (f <.> x)
+
 instance Monad m => Applicative (CommandT m) where
   pure = CommandT . pure
-  CommandT f <*> CommandT x = CommandT (f <*> x)
+  (<*>) = (<.>)
+
+instance Monad m => Bind (CommandT m) where
+  CommandT x >>- k = CommandT (x >>- unCommandT . k)
 
 instance Monad m => Monad (CommandT m) where
   return = pure
-  CommandT x >>= k = CommandT (x >>= unCommandT . k)
+  (>>=) = (>>-)
+
+instance Monad m => Alt (CommandT m) where
+  CommandT f <!> CommandT x = CommandT (f <!> x)
 
 instance Monad m => Alternative (CommandT m) where
   empty = CommandT empty
-  CommandT f <|> CommandT x = CommandT (f <|> x)
+  (<|>) = (<!>)
 
 instance Monad m => MonadPlus (CommandT m) where
   mzero = empty
