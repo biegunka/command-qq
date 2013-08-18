@@ -14,13 +14,13 @@ ExitSuccess
 <code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>[sh|echo &quot;hi!&quot;|] :: IO String
 </code></strong>&quot;hi!\n&quot;
 </pre><p>Haskell values can be embedded with Ruby-like syntax:
-</p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>let n = 7
-</code></strong><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>[sh|echo &quot;#{n} apples!&quot;|] :: IO String
+</p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>let apples = 7
+</code></strong><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>[sh|echo &quot;#{apples} apples!&quot;|] :: IO String
 </code></strong>&quot;7 apples!\n&quot;
 </pre><p>Works only for expressions (obviously):
 </p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>return 3 :: IO [sh|blah|]
 </code></strong>
-&lt;interactive&gt;:74:16:
+&lt;interactive&gt;:116:16:
     Exception when trying to run compile-time code:
       this quasiquoter does not support splicing types
       Code: quoteType sh &quot;blah&quot;
@@ -47,8 +47,6 @@ ExitSuccess
 </p></td></tr><tr><td class="src">-&gt; <a href="/usr/local/share/doc/ghc/html/libraries/template-haskell-2.8.0.0/Language-Haskell-TH-Syntax.html#t:Q">Q</a> <a href="/usr/local/share/doc/ghc/html/libraries/template-haskell-2.8.0.0/Language-Haskell-TH-Syntax.html#t:Exp">Exp</a></td><td class="doc empty">&nbsp;</td></tr></table></div><div class="doc"><p>Construct Haskell expression for external command call
 </p></div></div><div class="top"><p class="src"><span class="keyword">class</span>  <a name="t:Eval" class="def">Eval</a> r  <span class="keyword">where</span><a href="src/System-Command-QQ.html#Eval" class="link">Source</a></p><div class="doc"><p>Different interesting return types for quasiquoters
 </p><p>Instances here mostly resemble the types of things in <a href="/usr/local/share/doc/ghc/html/libraries/process-1.1.0.2/System-Process.html">System.Process</a>
-</p><p><a href="System-Command-QQ-CommandT.html">System.Command.QQ.CommandT</a> shows how to use <code><a href="System-Command-QQ.html#t:Eval">Eval</a></code> to provide nice DSL
- for sequencing external commands
 </p></div><div class="subs methods"><p class="caption">Methods</p><p class="src"><a name="v:eval" class="def">eval</a> :: <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a> -&gt; [<a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>] -&gt; r<a href="src/System-Command-QQ.html#eval" class="link">Source</a></p></div><div class="subs instances"><p id="control.i:Eval" class="caption collapser" onclick="toggleSection('i:Eval')">Instances</p><div id="section.i:Eval" class="show"><table><tr><td class="src"><a href="System-Command-QQ.html#t:Eval">Eval</a> (<a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/System-IO.html#t:IO">IO</a> <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>)</td><td class="doc"><p>Return only stdout of external process
 </p><p>Does not care if external process failed.
 </p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>[sh|echo hello world|] :: IO String
@@ -71,7 +69,7 @@ ExitSuccess
  and consume stdin from supplied <code><a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a></code>
 </p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>[sh|while read line; do echo ${#line}; done|] &quot;hello\nworld!\n&quot;
 </code></strong>(ExitSuccess,&quot;5\n6\n&quot;,&quot;&quot;)
-</pre></td></tr><tr><td class="src">(~ * i <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, ~ * o <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, <a href="/home/maksenov/git/command-qq/.cabal-sandbox/share/doc/x86_64-linux-ghc-7.6.2/transformers-0.3.0.0/html/Control-Monad-IO-Class.html#t:MonadIO">MonadIO</a> m) =&gt; <a href="System-Command-QQ.html#t:Eval">Eval</a> (i -&gt; <a href="System-Command-QQ-CommandT.html#t:CommandT">CommandT</a> m o)</td><td class="doc empty">&nbsp;</td></tr><tr><td class="src">(~ * o <a href="/usr/local/share/doc/ghc/html/libraries/base-4.6.0.1/Data-String.html#t:String">String</a>, <a href="/home/maksenov/git/command-qq/.cabal-sandbox/share/doc/x86_64-linux-ghc-7.6.2/transformers-0.3.0.0/html/Control-Monad-IO-Class.html#t:MonadIO">MonadIO</a> m) =&gt; <a href="System-Command-QQ.html#t:Eval">Eval</a> (<a href="System-Command-QQ-CommandT.html#t:CommandT">CommandT</a> m o)</td><td class="doc empty">&nbsp;</td></tr></table></div></div></div><div class="top"><p class="src"><span class="keyword">class</span>  <a name="t:Embed" class="def">Embed</a> a  <span class="keyword">where</span><a href="src/System-Command-QQ.html#Embed" class="link">Source</a></p><div class="doc"><p>Embed haskell values into external commands
+</pre></td></tr></table></div></div></div><div class="top"><p class="src"><span class="keyword">class</span>  <a name="t:Embed" class="def">Embed</a> a  <span class="keyword">where</span><a href="src/System-Command-QQ.html#Embed" class="link">Source</a></p><div class="doc"><p>Embed haskell values into external commands
 </p><p>I recommend using <code>-XExtendedDefaultRules</code> for modules
  where you want to embed values, it would save for annoying
  type annotations for numeric literals
