@@ -39,8 +39,8 @@ import qualified System.Process as P
 --
 -- Haskell values can be embedded with Ruby-like syntax:
 --
--- >>> let n = 7
--- >>> [sh|echo "#{n} apples!"|] :: IO String
+-- >>> let apples = 7
+-- >>> [sh|echo "#{apples} apples!"|] :: IO String
 -- "7 apples!\n"
 --
 -- Works only for expressions (obviously):

@@ -27,15 +27,15 @@ zsh  = QQ.shell "zsh"
 
 -- | Some interpreters quasiquoters
 --
--- >>> let n = 11
+-- >>> let foo = 11
 --
--- >>> [python|n = 11; print n == #{n}|] :: IO ()
+-- >>> [python|foo = 11; print foo == #{foo}|] :: IO ()
 -- True
 --
--- >>> [perl|my $n = 11; print $n == #{n}|] :: IO ()
+-- >>> [perl|my $foo = 11; print $foo == #{foo}|] :: IO ()
 -- 1
 --
--- >>> [ruby|n = 11; puts n == #{n}|] :: IO ()
+-- >>> [ruby|foo = 11; puts foo == #{foo}|] :: IO ()
 -- true
 python, perl, ruby :: QuasiQuoter
 python = QQ.shell "python" -- For whatever reason python uses @python -c <command>@ syntax
@@ -44,8 +44,8 @@ ruby   = QQ.interpreter "ruby"
 
 -- | More involved interpreter quasiquoter
 --
--- >>> let n = 11
--- >>> [ghci|let n = 11 in print $ n == #{n}|] :: IO ()
+-- >>> let foo = 11
+-- >>> [ghci|let foo = 11 in print $ foo == #{foo}|] :: IO ()
 -- True
 ghci :: QuasiQuoter
 ghci = QQ.quoter $ QQ.callCommand "ghc" ["-ignore-dot-ghci", "-e"]
