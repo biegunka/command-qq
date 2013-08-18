@@ -47,7 +47,7 @@ import qualified System.Process as P
 --
 -- >>> return 3 :: IO [sh|blah|]
 -- <BLANKLINE>
--- <interactive>:74:16:
+-- <interactive>:116:16:
 --     Exception when trying to run compile-time code:
 --       this quasiquoter does not support splicing types
 --       Code: quoteType sh "blah"
