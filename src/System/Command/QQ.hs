@@ -118,7 +118,7 @@ string2exp = raw where
     (before, '#':'\\':after) -> [e| before ++ '#' : $(raw after) |]
     (before, '#':after)      -> [e| before ++ '#' : $(raw after) |]
     (before, [])             -> [e| before |]
-    _ -> fail $ "Should never happen"
+    _                        -> fail $ "Should never happen"
 
   var (break (== '}') -> parts) = case parts of
      (before, '}':after) -> [e| embed $(return (VarE (mkName before))) ++ $(raw after) |]
