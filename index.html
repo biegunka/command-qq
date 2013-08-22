@@ -1,5 +1,24 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>command-qq-0.1.0.0: Quasiquoters for external commands</title><link href="ocean.css" rel="stylesheet" type="text/css" title="Ocean" /><script src="haddock-util.js" type="text/javascript"></script><script type="text/javascript">//<![CDATA[
 window.onload = function () {pageLoad();};
 //]]>
-</script></head><body><div id="package-header"><ul class="links" id="page-menu"><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul><p class="caption">command-qq-0.1.0.0: Quasiquoters for external commands</p></div><div id="content"><div id="description"><h1>command-qq-0.1.0.0: Quasiquoters for external commands</h1><div class="doc"><p>Quasiquoters for external commands
-</p></div></div><div id="module-list"><p class="caption">Modules</p><ul><li><span id="control.n.1" class="module collapser" onclick="toggleSection('n.1')">System</span><ul id="section.n.1" class="show"><li><span id="control.n.1.1" class="module collapser" onclick="toggleSection('n.1.1')">Command</span><ul id="section.n.1.1" class="show"><li><span class="module"><a href="System-Command-QQ.html">System.Command.QQ</a></span></li></ul></li></ul></li></ul></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.13.2</p></div></body></html>
+</script></head><body><div id="package-header"><ul class="links" id="page-menu"><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul><p class="caption">command-qq-0.1.0.0: Quasiquoters for external commands</p></div><div id="content"><div id="description"><h1>command-qq-0.1.0.0: Quasiquoters for external commands</h1><div class="doc"><p>Features:
+</p><ul><li> Quasiquotation syntax for external commands:
+</li></ul><pre> [sh| echo hello world! |]
+</pre><ul><li> Easy way to define custom quasiquoters (see <code>examples/CustomQQ.hs</code>)
+</li></ul><pre> ghci = QQ.quoter $ QQ.callCommand &quot;ghc&quot; [&quot;-ignore-dot-ghci&quot;, &quot;-e&quot;]
+</pre><ul><li> Can embed Haskell variables in scripts
+</li></ul><pre> class Embed a where
+   embed :: a -&gt; String
+
+ instance Embed String
+   embed = id
+
+ main :: IO ()
+ main = let excl = replicate 3 '!' in -- I'd love to show an example but haddock markup fails here
+</pre><ul><li> Can embed quasiquoters in DSLs (see <code>examples/CommandT.hs</code>)
+</li></ul><pre> class Eval r where
+   eval :: String -&gt; [String] -&gt; r
+
+ instance Eval (IO ExitCode) where
+   eval command args = System.Process.rawSystem command args
+</pre></div></div><div id="module-list"><p class="caption">Modules</p><ul><li><span id="control.n.1" class="module collapser" onclick="toggleSection('n.1')">System</span><ul id="section.n.1" class="show"><li><span id="control.n.1.1" class="module collapser" onclick="toggleSection('n.1.1')">Command</span><ul id="section.n.1.1" class="show"><li><span class="module"><a href="System-Command-QQ.html">System.Command.QQ</a></span></li></ul></li></ul></li></ul></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.13.2</p></div></body></html>
