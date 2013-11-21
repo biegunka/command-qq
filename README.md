@@ -4,7 +4,7 @@
 
 ```
 >>> import System.Command.QQ
->>> putStrLn =<< unlines . reverse . lines <$> [sh|cowsay "Hello, I am command-qq!"|]
+>>> putStr =<< unlines . reverse . lines <$> [sh|cowsay "Hello, I am command-qq!"|]
                 ||     ||
                 ||----w |
             (__)\       )\/\

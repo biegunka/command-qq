@@ -7,7 +7,10 @@
 -- | Quasiquoters for external commands
 module System.Command.QQ
   ( -- * Quasiquoters
-    sh, shell, interpreter
+    -- ** Default shell
+    sh_, sh
+    -- ** Constructors
+  , shell, interpreter
     -- * Customizations
   , quoter, callCommand
   , Eval(..), Embed(..)
@@ -28,59 +31,60 @@ import qualified System.Process as P
 
 -- | Quasiquoter for the default shell
 --
--- \"default\" here means it uses value of @SHELL@ environment variable
--- or @\/bin\/sh@ if it is not set.
+-- Constructs polymorphic action of type @Eval a => a@ from passed string.
 --
--- >>> [sh|echo "hi!"|] :: IO ExitCode
--- hi!
+-- Uses @SHELL@ environment variable as path to shell executable
+-- or @\/bin\/sh@ if it is unset.
+--
+-- >>> [sh|echo "hello, world!"|] :: IO ExitCode
+-- hello, world!
 -- ExitSuccess
--- >>> [sh|echo "hi!"|] :: IO String
--- "hi!\n"
+-- >>> [sh|echo "hello, world!"|] :: IO String
+-- "hello, world!\n"
 --
 -- Haskell values can be embedded with Ruby-like syntax:
 --
 -- >>> let apples = 7
 -- >>> [sh|echo "#{apples} apples!"|] :: IO String
 -- "7 apples!\n"
---
--- Works only for expressions (obviously):
---
--- >>> return 3 :: IO [sh|blah|]
--- <BLANKLINE>
--- <interactive>:116:16:
---     Exception when trying to run compile-time code:
---       this quasiquoter does not support splicing types
---       Code: quoteType sh "blah"
 sh :: QuasiQuoter
 sh = quoter $ \string -> do
   shellEx <- runIO $ getEnvDefault "SHELL" "/bin/sh"
   callCommand shellEx ["-c"] string
 
--- | Shell commands quasiquoter maker
+-- | Simple quasiquoter for the default shell
 --
--- \"Shell\" here means something that implements the following interface:
+-- 'sh' analog that always constructs an action of type
+-- @IO ()@ and so can always be used without type annotations
+--
+-- >>> [sh_|echo "hello, world!"|]
+-- hello, world!
+sh_ :: QuasiQuoter
+sh_ = quoter $ \string -> do
+  shellEx <- runIO $ getEnvDefault "SHELL" "/bin/sh"
+  callCommand_ shellEx ["-c"] string
+
+-- | Shell's quasiquoter constructor
+--
+-- \"Shell\" here means executable that has the following API:
 --
 -- @
 -- \<SHELL\> -c \<COMMAND\>
 -- @
 --
 -- /e.g./ @sh@, @bash@, @zsh@, @ksh@, @tcsh@, @python@, etc
---
--- Everything that applies to 'sh' applies to 'shell'
 shell :: FilePath -> QuasiQuoter
 shell path = quoter (callCommand path ["-c"])
 
--- | Interpreter commands quasiquoter maker
+-- | Interpreter's quasiquoter constructor
 --
--- \"Interpreter\" here means something that implements the following interface:
+-- \"Interpreter\" here means executable that has the following API:
 --
 -- @
 -- \<INTERPRETER\> -e \<COMMAND\>
 -- @
 --
 -- /e.g./ @perl@, @ruby@, @ghc@, etc
---
--- Everything that applies to 'sh' applies to 'interpreter'
 interpreter :: FilePath -> QuasiQuoter
 interpreter path = quoter (callCommand path ["-e"])
 
@@ -109,6 +113,15 @@ callCommand
   -> Q Exp
 callCommand path args string =
   [e| eval path (args ++ [$(string2exp string)]) |]
+
+-- | Construct Haskell expression for external command call
+callCommand_
+  :: FilePath -- ^ Command path
+  -> [String] -- ^ Arguments that go to command before quasiquoter contents
+  -> String   -- ^ Quasiquoter contents
+  -> Q Exp
+callCommand_ path args string =
+  [e| eval path (args ++ [$(string2exp string)]) :: IO () |]
 
 -- | Parse references to Haskell variables
 string2exp :: String -> Q Exp
