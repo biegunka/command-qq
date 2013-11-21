@@ -184,6 +184,16 @@ instance Eval (IO Text) where
     (_, out, _) <- eval command args
     return out
 
+-- | Return only stdout of external process as 'String'
+--
+-- >>> [sh|echo hello world|] :: IO String
+-- "hello world\n"
+--
+-- >>> [sh|echo hello world; return 1|] :: IO String
+-- "hello world\n"
+instance Eval (IO String) where
+  eval command args = T.unpack <$> eval command args
+
 -- | Return exit code, stdout, and stderr of external process
 --
 -- >>> [sh|echo hello world; echo bye world >&2; exit 1|] :: IO (ExitCode, Text, Text)
