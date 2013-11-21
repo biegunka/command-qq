@@ -51,7 +51,6 @@ library
     , process
     , template-haskell
     , text
-    , unix
   hs-source-dirs:    src
   exposed-modules:
     System.Command.QQ

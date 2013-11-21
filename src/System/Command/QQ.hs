@@ -19,13 +19,14 @@ import           Control.Applicative
 import           Control.Concurrent
 import           Control.Exception (evaluate)
 import           Control.Monad
+import           Data.Maybe (fromMaybe)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as T
+import           System.Environment (lookupEnv)
 import           System.Exit (ExitCode)
-import           System.Posix.Env (getEnvDefault)
 import qualified System.Process as P
 import           System.IO (hFlush, hClose)
 
@@ -56,7 +57,7 @@ import           System.Command.QQ.Embed
 -- "7 apples!\n"
 sh :: QuasiQuoter
 sh = quoter $ \string -> do
-  shellEx <- runIO $ getEnvDefault "SHELL" "/bin/sh"
+  shellEx <- runIO $ getEnvDefault "/bin/sh" "SHELL"
   callCommand shellEx ["-c"] string
 
 -- | Simple quasiquoter for the default shell
@@ -68,7 +69,7 @@ sh = quoter $ \string -> do
 -- hello, world!
 sh_ :: QuasiQuoter
 sh_ = quoter $ \string -> do
-  shellEx <- runIO $ getEnvDefault "SHELL" "/bin/sh"
+  shellEx <- runIO $ getEnvDefault "/bin/sh" "SHELL"
   callCommand_ shellEx ["-c"] string
 
 -- | Shell's quasiquoter constructor
@@ -204,6 +205,9 @@ instance
   , o ~ (ExitCode, Text, Text)
   ) => Eval (i -> IO o) where
   eval = readProcessWithExitCode
+
+getEnvDefault :: String -> String -> IO String
+getEnvDefault def query = fromMaybe def <$> lookupEnv query
 
 readProcessWithExitCode :: String -> [String] -> Text -> IO (ExitCode, Text, Text)
 readProcessWithExitCode cmd args input = do
