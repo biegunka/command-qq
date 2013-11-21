@@ -4,7 +4,8 @@
 
 ```
 >>> import System.Command.QQ
->>> putStr =<< unlines . reverse . lines <$> [sh|cowsay "Hello, I am command-qq!"|]
+>>> import qualified Data.Text.Lazy as Text
+>>> Text.putStr =<< Text.unlines . reverse . Text.lines <$> [sh|cowsay "Hello, I am command-qq!"|]
                 ||     ||
                 ||----w |
             (__)\       )\/\

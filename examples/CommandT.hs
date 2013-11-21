@@ -16,13 +16,15 @@ import Control.Monad.IO.Class (MonadIO(..))        -- transformers
 import Control.Monad.Trans.Class (MonadTrans(..))  -- transformers
 import Control.Monad.Trans.Either                  -- either
 import Data.Monoid (Last(..))                      -- base
+import Data.Text.Lazy (Text)                       -- text
 import System.Exit (ExitCode(..))                  -- base
 import System.Command.QQ (Eval(..))                -- command-qq
 
 -- $setup
 -- >>> :set -XQuasiQuotes
 -- >>> import System.Command.QQ
--- >>> let lengths = [sh|while read line; do echo ${#line}; done|] :: String -> CommandT IO String
+-- >>> import qualified Data.Text.Lazy as T
+-- >>> let lengths = [sh|while read line; do echo ${#line}; done|] :: Text -> CommandT IO Text
 
 
 infixl 1 >>! -- same as >>=
@@ -50,7 +52,7 @@ infixl 1 >>! -- same as >>=
 newtype CommandT m a = CommandT { unCommandT :: EitherT (Last Failure) m a }
 
 -- | Failed command with exit code and @stderr@
-data Failure = Failure Command Int String
+data Failure = Failure Command Int Text
     deriving (Show, Read)
 
 -- | Command name and arguments
@@ -86,14 +88,14 @@ instance MonadTrans CommandT where
 instance MonadIO m => MonadIO (CommandT m) where
   liftIO = lift . liftIO
 
-instance (o ~ String, MonadIO m) => Eval (CommandT m o) where
+instance (o ~ Text, MonadIO m) => Eval (CommandT m o) where
   eval command args = CommandT . EitherT $ do
     (status, out, err) <- liftIO $ eval command args
     return $ case status of
       ExitSuccess   -> Right out
       ExitFailure i -> Left (Last (Just (Failure (Command command args) i err)))
 
-instance (i ~ String, o ~ String, MonadIO m) => Eval (i -> CommandT m o) where
+instance (i ~ Text, o ~ Text, MonadIO m) => Eval (i -> CommandT m o) where
   eval command args input = CommandT . EitherT $ do
     (status, out, err) <- liftIO $ eval command args input
     return $ case status of
@@ -115,9 +117,9 @@ instance (i ~ String, o ~ String, MonadIO m) => Eval (i -> CommandT m o) where
 --
 -- And playing may involve arbitrary Haskell functions, of course:
 --
--- >>> runCommandT $ [sh|echo -e "hello\nworld!!!">&2; exit 1|] >>! lengths . unlines . reverse . lines
+-- >>> runCommandT $ [sh|echo -e "hello\nworld!!!">&2; exit 1|] >>! lengths . T.unlines . reverse . T.lines
 -- Right "8\n5\n"
-(>>!) :: Monad m => CommandT m a -> (String -> CommandT m b) -> CommandT m b
+(>>!) :: Monad m => CommandT m a -> (Text -> CommandT m b) -> CommandT m b
 x >>! k = CommandT . EitherT $ do
   t <- runCommandT x
   case t of

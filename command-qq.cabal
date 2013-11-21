@@ -50,6 +50,7 @@ library
       base == 4.*
     , process
     , template-haskell
+    , text
     , unix
   hs-source-dirs:    src
   exposed-modules:
@@ -73,6 +74,7 @@ test-suite spec
     , hspec
     , command-qq
     , template-haskell
+    , text
   hs-source-dirs:
       tests
     , examples

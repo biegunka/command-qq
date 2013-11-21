@@ -1,6 +1,4 @@
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -18,16 +16,24 @@ module System.Command.QQ
   ) where
 
 import           Control.Applicative
+import           Control.Concurrent
+import           Control.Exception (evaluate)
+import           Control.Monad
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
+import           Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy.IO as T
 import           System.Exit (ExitCode)
 import           System.Posix.Env (getEnvDefault)
 import qualified System.Process as P
+import           System.IO (hFlush, hClose)
 
 import           System.Command.QQ.Embed
 
 -- $setup
 -- >>> :set -XQuasiQuotes
+-- >>> :set -XOverloadedStrings
 
 
 -- | Quasiquoter for the default shell
@@ -40,13 +46,13 @@ import           System.Command.QQ.Embed
 -- >>> [sh|echo "hello, world!"|] :: IO ExitCode
 -- hello, world!
 -- ExitSuccess
--- >>> [sh|echo "hello, world!"|] :: IO String
+-- >>> [sh|echo "hello, world!"|] :: IO Text
 -- "hello, world!\n"
 --
 -- Haskell values can be embedded with Ruby-like syntax:
 --
 -- >>> let apples = 7
--- >>> [sh|echo "#{apples} apples!"|] :: IO String
+-- >>> [sh|echo "#{apples} apples!"|] :: IO Text
 -- "7 apples!\n"
 sh :: QuasiQuoter
 sh = quoter $ \string -> do
@@ -167,26 +173,26 @@ instance Eval (IO ExitCode) where
 --
 -- Does not care if external process failed.
 --
--- >>> [sh|echo hello world|] :: IO String
+-- >>> [sh|echo hello world|] :: IO Text
 -- "hello world\n"
 --
--- >>> [sh|echo hello world; return 1|] :: IO String
+-- >>> [sh|echo hello world; return 1|] :: IO Text
 -- "hello world\n"
-instance Eval (IO String) where
+instance Eval (IO Text) where
   eval command args = do
     (_, out, _) <- eval command args
     return out
 
 -- | Return exit code, stdout, and stderr of external process
 --
--- >>> [sh|echo hello world; echo bye world >&2; exit 1|] :: IO (ExitCode, String, String)
+-- >>> [sh|echo hello world; echo bye world >&2; exit 1|] :: IO (ExitCode, Text, Text)
 -- (ExitFailure 1,"hello world\n","bye world\n")
 instance
   ( s ~ ExitCode
-  , o ~ String
-  , e ~ String
+  , o ~ Text
+  , e ~ Text
   ) => Eval (IO (s, o, e)) where
-  eval command args = P.readProcessWithExitCode command args ""
+  eval command args = eval command args (T.pack "")
 
 -- | Return exit code, stdout, and stderr of external process
 -- and consume stdin from supplied 'String'
@@ -194,7 +200,37 @@ instance
 -- >>> [sh|while read line; do echo ${#line}; done|] "hello\nworld!\n"
 -- (ExitSuccess,"5\n6\n","")
 instance
-  ( i ~ String
-  , o ~ (ExitCode, String, String)
+  ( i ~ Text
+  , o ~ (ExitCode, Text, Text)
   ) => Eval (i -> IO o) where
-  eval = P.readProcessWithExitCode
+  eval = readProcessWithExitCode
+
+readProcessWithExitCode :: String -> [String] -> Text -> IO (ExitCode, Text, Text)
+readProcessWithExitCode cmd args input = do
+    (Just ih, Just oh, Just eh, p) <-
+        P.createProcess (P.proc cmd args)
+          { P.std_in  = P.CreatePipe
+          , P.std_out = P.CreatePipe
+          , P.std_err = P.CreatePipe
+          }
+
+    m <- newEmptyMVar
+    o <- T.hGetContents oh
+    e <- T.hGetContents eh
+
+    forkFinally (evaluate (T.length o)) (\_ -> putMVar m ())
+    forkFinally (evaluate (T.length e)) (\_ -> putMVar m ())
+
+    unless (T.null input) $ do
+      T.hPutStr ih input
+      hFlush ih
+    hClose ih
+
+    takeMVar m
+    takeMVar m
+    hClose oh
+    hClose eh
+
+    s <- P.waitForProcess p
+
+    return (s, o, e)
