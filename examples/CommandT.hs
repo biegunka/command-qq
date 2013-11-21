@@ -15,9 +15,6 @@ import Control.Monad (MonadPlus(..))               -- base
 import Control.Monad.IO.Class (MonadIO(..))        -- transformers
 import Control.Monad.Trans.Class (MonadTrans(..))  -- transformers
 import Control.Monad.Trans.Either                  -- either
-import Data.Functor.Alt (Alt(..))                  -- semigroupoids
-import Data.Functor.Apply (Apply(..))              -- semigroupoids
-import Data.Functor.Bind (Bind(..))                -- semigroupoids
 import Data.Monoid (Last(..))                      -- base
 import System.Exit (ExitCode(..))                  -- base
 import System.Command.QQ (Eval(..))                -- command-qq
@@ -67,26 +64,17 @@ runCommandT = runEitherT . unCommandT
 instance Monad m => Functor (CommandT m) where
   fmap f (CommandT x) = CommandT (fmap f x)
 
-instance Monad m => Apply (CommandT m) where
-  CommandT f <.> CommandT x = CommandT (f <.> x)
-
 instance Monad m => Applicative (CommandT m) where
   pure = CommandT . pure
-  (<*>) = (<.>)
-
-instance Monad m => Bind (CommandT m) where
-  CommandT x >>- k = CommandT (x >>- unCommandT . k)
+  CommandT f <*> CommandT x = CommandT (f <*> x)
 
 instance Monad m => Monad (CommandT m) where
   return = pure
-  (>>=) = (>>-)
-
-instance Monad m => Alt (CommandT m) where
-  CommandT f <!> CommandT x = CommandT (f <!> x)
+  CommandT x >>= k = CommandT (x >>= unCommandT . k)
 
 instance Monad m => Alternative (CommandT m) where
   empty = CommandT empty
-  (<|>) = (<!>)
+  CommandT f <|> CommandT x = CommandT (f <|> x)
 
 instance Monad m => MonadPlus (CommandT m) where
   mzero = empty

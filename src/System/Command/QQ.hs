@@ -13,17 +13,18 @@ module System.Command.QQ
   , shell, interpreter
     -- * Customizations
   , quoter, callCommand
-  , Eval(..), Embed(..)
+  , Eval(..)
+  , module System.Command.QQ.Embed
   ) where
 
-import           Control.Applicative ((<$), pure)
-import           Data.Int
-import           Data.Word
+import           Control.Applicative
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
 import           System.Exit (ExitCode)
 import           System.Posix.Env (getEnvDefault)
 import qualified System.Process as P
+
+import           System.Command.QQ.Embed
 
 -- $setup
 -- >>> :set -XQuasiQuotes
@@ -131,7 +132,7 @@ string2exp = raw where
     (before, '#':'\\':after) -> [e| before ++ '#' : $(raw after) |]
     (before, '#':after)      -> [e| before ++ '#' : $(raw after) |]
     (before, [])             -> [e| before |]
-    _                        -> fail $ "Should never happen"
+    _                        -> fail "Should never happen"
 
   var (break (== '}') -> parts) = case parts of
      (before, '}':after) -> [e| embed $(return (VarE (mkName before))) ++ $(raw after) |]
@@ -160,7 +161,7 @@ instance Eval (IO ()) where
 -- >>> [sh|exit 1|] :: IO ExitCode
 -- ExitFailure 1
 instance Eval (IO ExitCode) where
-  eval command args = P.rawSystem command args
+  eval = P.rawSystem
 
 -- | Return only stdout of external process
 --
@@ -196,66 +197,4 @@ instance
   ( i ~ String
   , o ~ (ExitCode, String, String)
   ) => Eval (i -> IO o) where
-  eval command args stdin = P.readProcessWithExitCode command args stdin
-
-
--- | Embed haskell values into external commands
---
--- I recommend using @-XExtendedDefaultRules@ for modules
--- where you want to embed values, it would save for annoying
--- type annotations for numeric literals
---
--- @
--- embed . embed = embed
--- @
-class Embed a where
-  embed :: a -> String
-  default embed :: Show a => a -> String
-  embed = show
-
--- |
--- >>> embed 4
--- "4"
---
--- >>> embed (7 :: Integer)
--- "7"
-instance Embed Integer
-
--- |
--- >>> embed (7 :: Int)
--- "7"
-instance Embed Int
-instance Embed Int8
-instance Embed Int16
-instance Embed Int32
-instance Embed Int64
-instance Embed Word
-instance Embed Word8
-instance Embed Word16
-instance Embed Word32
-instance Embed Word64
-
--- |
--- >>> embed (7 :: Float)
--- "7.0"
-instance Embed Float
-
--- |
--- >>> embed 4.0
--- "4.0"
---
--- >>> embed (7 :: Double)
--- "7.0"
-instance Embed Double
-
--- |
--- >>> embed 'c'
--- "c"
-instance Embed Char where
-  embed = pure
-
--- |
--- >>> embed "hi"
--- "hi"
-instance Embed String where
-  embed = id
+  eval = P.readProcessWithExitCode
