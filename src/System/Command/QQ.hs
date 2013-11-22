@@ -11,7 +11,6 @@ module System.Command.QQ
   , shell, interpreter
     -- * Customizations
   , quoter, callCommand
-  , Eval(..)
   , module System.Command.QQ.Embed
   , module System.Command.QQ.Eval
   ) where
