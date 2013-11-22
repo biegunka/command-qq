@@ -17,10 +17,12 @@ module System.Command.QQ
   ) where
 
 import Control.Applicative
+import Data.Char (isLower, isUpper)
 import Data.Maybe (fromMaybe)
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
 import System.Environment (lookupEnv)
+import Text.Read (readMaybe)
 
 import System.Command.QQ.Embed
 import System.Command.QQ.Eval
@@ -128,6 +130,7 @@ callCommand_ path args string =
 -- | Parse references to Haskell variables
 string2exp :: String -> Q Exp
 string2exp = raw where
+  raw, var :: String -> Q Exp
   raw (break (== '#') -> parts) = case parts of
     (before, '#':'{' :after) -> [e| before ++ $(var after) |]
     (before, '#':'\\':after) -> [e| before ++ '#' : $(raw after) |]
@@ -136,8 +139,18 @@ string2exp = raw where
     _                        -> fail "Should never happen"
 
   var (break (== '}') -> parts) = case parts of
-     (before, '}':after) -> [e| embed $(return (VarE (mkName before))) ++ $(raw after) |]
-     (before, _)         -> fail $ "Bad variable pattern: #{" ++ before
+     (b:efore, '}':after)
+        | isLower b                    -> external (VarE (mkName (b:efore))) after
+        | isUpper b                    -> external (ConE (mkName (b:efore))) after
+        | isUpper b                    -> external (ConE (mkName (b:efore))) after
+        | Just i <- readMaybe (b:efore) -> external (LitE (IntegerL i)) after
+        | Just d <- readMaybe (b:efore) -> external (LitE (RationalL (toRational (d :: Double)))) after
+        | Just c <- readMaybe (b:efore) -> external (LitE (CharL c)) after
+        | Just s <- readMaybe (b:efore) -> external (LitE (StringL s)) after
+     (before, _)    -> fail $ "Invalid name: " ++ before
+
+  external :: Exp -> String -> Q Exp
+  external e after = [e| embed $(return e) ++ $(raw after) |]
 
 -- | Get environment variable or default value if it's unset
 getEnvDefault

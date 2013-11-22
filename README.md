@@ -59,9 +59,14 @@ instance Embed Bang
 Then you can use variables of `Bang` type in quoted strings!
 
 ```
+>>> [sh_| echo hello#{Bang} |]
+hello!
 >>> let bang = Bang in [sh_| echo hello#{bang} |]
 hello!
 ```
+
+Note, `command-qq` does not support full Haskell in embeddings,
+only variables/constructors names and literals
 
 ### DSLs
 

@@ -69,5 +69,26 @@ spec = do
         [sh|echo "#\{foo}"|] `shouldReturn` "#{foo}\n"
         [sh|echo "#\\{foo}"|] `shouldReturn` "#\\{foo}\n"
 
+    describe "literals" $ do
+      it "is possible to embed integer literals" $
+        [sh|echo -n #{4}|] `shouldReturn` "4"
+
+      it "is possible to embed rational literals" $
+        [sh|echo -n #{4.0}|] `shouldReturn` "4.0"
+
+      it "is possible to embed char literals" $
+        [sh|echo -n #{'q'}|] `shouldReturn` "q"
+
+      it "is possible to embed string literals" $
+        [sh|echo -n #{"hello"}|] `shouldReturn` "hello"
+
+    describe "custom data types" $
+      it "is possible to embed custom data types" $
+        [sh|echo -n hello#{Bang}|] `shouldReturn` "hello!"
+
+data Bang = Bang
+
+instance Embed Bang where embed Bang = "!"
+
 text :: String -> Text
 text = pack
