@@ -12,6 +12,9 @@ import Data.Ratio (Ratio)
 import Data.Word
 import Foreign.C.Types
 
+-- $setup
+-- >>> import Data.Ratio
+
 
 -- | Embed haskell values into external commands
 --
