@@ -1,7 +1,7 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
- -- Haskell values embedding
+-- | Haskell values embedding
 module System.Command.QQ.Embed
   ( Embed(..)
   ) where

@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
--- Evalute passed arguments with external interpreter
+-- | Evalute passed arguments with external interpreter
 module System.Command.QQ.Eval
   ( Eval(..)
   ) where
