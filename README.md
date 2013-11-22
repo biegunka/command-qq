@@ -14,3 +14,58 @@
 < Hello, I am command-qq! >
  _________________________
 ```
+
+## Install
+
+```
+% cabal install command-qq
+```
+
+## Features
+
+### Quasiquotation syntax for external interpreters
+
+```
+>>> [sh_| echo hello world! |]
+hello world!
+```
+
+### Custom quasiquoters
+
+```
+ghci = quoter $ callCommand "ghc" ["-ignore-dot-ghci", "-e"]
+```
+
+Then you can use `ghci` in ghci!
+
+```
+>>> [ghci| putStrLn "hello world!" |] :: IO ()
+hello world!
+```
+
+For more examples, see [`examples/CustomQQ.hs`][0]
+
+### Haskell values embedding
+
+Let's define `Embed` instance for a custom data type:
+
+```haskell
+data Bang = Bang
+
+instance Embed Bang
+  embed Bang = "!"
+```
+
+Then you can use variables of `Bang` type in quoted strings!
+
+```
+>>> let bang = Bang in [sh_| echo hello#{bang} |]
+hello!
+```
+
+### DSLs
+
+See [`examples/CommandT.hs`][1]
+
+  [0]: https://github.com/biegunka/command-qq/blob/master/examples/CustomQQ.hs
+  [1]: https://github.com/biegunka/command-qq/blob/master/examples/CommandT.hs

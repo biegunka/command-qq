@@ -4,33 +4,29 @@ synopsis:            Quasiquoters for external commands
 description:
   Features:
   .
-  * Quasiquotation syntax for external commands:
+  * Quasiquotation syntax for external interpreters
   .
-  > [sh_| echo hello world! |]
-  > "hello world!"
+    > >>> [sh_| echo hello world! |]
+    > hello world!
   .
-  * Easy way to define custom quasiquoters (see @examples/CustomQQ.hs@)
+  * Custom quasiquoters
   .
-  > ghci = QQ.quoter $ QQ.callCommand "ghc" ["-ignore-dot-ghci", "-e"]
+    > ghci = quoter $ callCommand "ghc" ["-ignore-dot-ghci", "-e"]
   .
-  * Can embed Haskell variables in scripts
+    Then you can use @ghci@ in ghci!
   .
-  > class Embed a where
-  >   embed :: a -> String
-  >
-  > instance Embed String
-  >   embed = id
-  >
-  > main :: IO ()
-  > main = let excl = replicate 3 '!' in -- I'd love to show an example but haddock markup fails here
+    > >>> [ghci| putStrLn "hello world!" |] :: IO ()
+    > hello world!
   .
-  * Can embed quasiquoters in DSLs (see @examples/CommandT.hs@)
+    For more examples, see @examples/CustomQQ.hs@
   .
-  > class Eval r where
-  >   eval :: String -> [String] -> r
-  >
-  > instance Eval (IO ExitCode) where
-  >   eval command args = System.Process.rawSystem command args
+  * Haskell values embedding
+  .
+    See README.md for an example
+  .
+  * DSLs
+  .
+    See @examples/CommandT.hs@
   .
 homepage:            http://biegunka.github.io/command-qq/
 license:             BSD3
