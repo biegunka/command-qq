@@ -52,7 +52,7 @@ Let's define `Embed` instance for a custom data type:
 ```haskell
 data Bang = Bang
 
-instance Embed Bang
+instance Embed Bang where
   embed Bang = "!"
 ```
 
