@@ -1,5 +1,6 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies #-}
  -- Haskell values embedding
 module System.Command.QQ.Embed
   ( Embed(..)
@@ -7,7 +8,9 @@ module System.Command.QQ.Embed
 
 import Control.Applicative
 import Data.Int
+import Data.Ratio (Ratio)
 import Data.Word
+import Foreign.C.Types
 
 
 -- | Embed haskell values into external commands
@@ -24,17 +27,7 @@ class Embed a where
   default embed :: Show a => a -> String
   embed = show
 
--- |
--- >>> embed 4
--- "4"
---
--- >>> embed (7 :: Integer)
--- "7"
 instance Embed Integer
-
--- |
--- >>> embed (7 :: Int)
--- "7"
 instance Embed Int
 instance Embed Int8
 instance Embed Int16
@@ -45,19 +38,29 @@ instance Embed Word8
 instance Embed Word16
 instance Embed Word32
 instance Embed Word64
-
--- |
--- >>> embed (7 :: Float)
--- "7.0"
 instance Embed Float
+instance Embed Double
+
+instance Embed CChar
+instance Embed CSChar
+instance Embed CUChar
+instance Embed CShort
+instance Embed CUShort
+instance Embed CInt
+instance Embed CUInt
+instance Embed CLong
+instance Embed CULong
+instance Embed CSize
+instance Embed CLLong
+instance Embed CULLong
+instance Embed CFloat
+instance Embed CDouble
 
 -- |
--- >>> embed 4.0
--- "4.0"
---
--- >>> embed (7 :: Double)
--- "7.0"
-instance Embed Double
+-- >>> embed (3 % 5)
+-- "0.6"
+instance a ~ Integer => Embed (Ratio a) where
+  embed = embed . (fromRational :: Rational -> Double)
 
 -- |
 -- >>> embed 'c'

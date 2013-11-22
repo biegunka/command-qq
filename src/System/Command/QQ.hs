@@ -147,7 +147,7 @@ string2exp = raw where
         | Just d <- readMaybe (b:efore) -> external (LitE (RationalL (toRational (d :: Double)))) after
         | Just c <- readMaybe (b:efore) -> external (LitE (CharL c)) after
         | Just s <- readMaybe (b:efore) -> external (LitE (StringL s)) after
-     (before, _)    -> fail $ "Invalid name: " ++ before
+     (before, _)                       -> fail $ "Invalid name: " ++ before
 
   external :: Exp -> String -> Q Exp
   external e after = [e| embed $(return e) ++ $(raw after) |]
