@@ -1,4 +1,5 @@
 # command-qq
+[![Hackage](https://budueba.com/hackage/command-qq)](http://hackage.haskell.org/package/command-qq)
 [![Build Status](https://secure.travis-ci.org/biegunka/command-qq.png?branch=master)](http://travis-ci.org/biegunka/command-qq)
 [![Build Status](https://drone.io/github.com/biegunka/command-qq/status.png)](https://drone.io/github.com/biegunka/command-qq/latest)
 
