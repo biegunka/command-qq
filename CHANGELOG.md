@@ -3,5 +3,5 @@
 
   * Added `sh_` quasiquoter to avoid type annotations for trivial quotes
   * Moved `Eval` onto `Text` to speed I/O up.
-  * Quasiquoters support literals and no argument constructors
+  * Quasiquoters support literals and constructors with no arguments
   * More `Embed` instances
