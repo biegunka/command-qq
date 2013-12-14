@@ -2,5 +2,5 @@ language: haskell
 
 before_install:
  - sudo apt-get update
- - sudo apt-get install zsh                        # doctests dependency
+ - sudo apt-get install zsh python3                # tests dependencies
  - cabal install either semigroupoids transformers # examples dependencies
