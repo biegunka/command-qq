@@ -8,6 +8,6 @@ main = doctest
   [ "src/System/Command/QQ.hs"
   , "src/System/Command/QQ/Embed.hs"
   , "src/System/Command/QQ/Eval.hs"
-  , "examples/CustomQQ.hs"
+  , "src/System/Command/QQ/Predef.hs"
   , "examples/CommandT.hs"
   ]

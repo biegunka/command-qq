@@ -40,7 +40,6 @@ extra-source-files:
   CHANGELOG.md
   README.md
   examples/CommandT.hs
-  examples/CustomQQ.hs
 
 
 library
