@@ -1,3 +1,8 @@
+0.2.1.0
+=======
+
+  * Add a bunch of predefined quasiquoters to `System.Command.QQ.Predef`
+
 0.2.0.0
 =======
 

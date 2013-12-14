@@ -44,7 +44,7 @@ Then you can use `ghci` in ghci!
 hello world!
 ```
 
-For more examples, see [`examples/CustomQQ.hs`][0]
+For more examples, see [`System.Command.QQ.Predef`][0]
 
 ### Haskell values embedding
 
@@ -73,5 +73,5 @@ only variables/constructors names and literals
 
 See [`examples/CommandT.hs`][1]
 
-  [0]: https://github.com/biegunka/command-qq/blob/master/examples/CustomQQ.hs
+  [0]: https://github.com/biegunka/command-qq/blob/master/src/System/Command/QQ/Predef.hs
   [1]: https://github.com/biegunka/command-qq/blob/master/examples/CommandT.hs
