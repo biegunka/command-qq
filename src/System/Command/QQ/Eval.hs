@@ -26,7 +26,9 @@ import           System.IO (hFlush, hClose)
 class Eval r where
   eval :: String -> [String] -> r
 
--- | Most basic instance: nothing is known about what happened in external command
+-- | The most basic instance: nothing is known about what happened in external command
+--
+-- External command's stdout and stderr go to caller's stdout and stderr respectively
 --
 -- >>> [sh|echo hello world|] :: IO ()
 -- hello world
@@ -89,30 +91,29 @@ instance
 
 readProcessWithExitCode :: String -> [String] -> Text -> IO (ExitCode, Text, Text)
 readProcessWithExitCode cmd args input = do
-    (Just ih, Just oh, Just eh, p) <-
-        P.createProcess (P.proc cmd args)
-          { P.std_in  = P.CreatePipe
-          , P.std_out = P.CreatePipe
-          , P.std_err = P.CreatePipe
-          }
+  (Just inh, Just outh, Just errh, p) <-
+      P.createProcess (P.proc cmd args)
+        { P.std_in  = P.CreatePipe
+        , P.std_out = P.CreatePipe
+        , P.std_err = P.CreatePipe
+        }
 
-    m <- newEmptyMVar
-    o <- T.hGetContents oh
-    e <- T.hGetContents eh
+  var <- newEmptyMVar
+  out <- T.hGetContents outh
+  err <- T.hGetContents errh
 
-    forkFinally (evaluate (T.length o)) (\_ -> putMVar m ())
-    forkFinally (evaluate (T.length e)) (\_ -> putMVar m ())
+  forkFinally (evaluate (T.length out)) (\_ -> putMVar var ())
+  forkFinally (evaluate (T.length err)) (\_ -> putMVar var ())
 
-    unless (T.null input) $ do
-      T.hPutStr ih input
-      hFlush ih
-    hClose ih
+  unless (T.null input) $
+    T.hPutStr inh input >> hFlush inh
+  hClose inh
 
-    takeMVar m
-    takeMVar m
-    hClose oh
-    hClose eh
+  takeMVar var
+  takeMVar var
+  hClose outh
+  hClose errh
 
-    s <- P.waitForProcess p
+  s <- P.waitForProcess p
 
-    return (s, o, e)
+  return (s, out, err)
