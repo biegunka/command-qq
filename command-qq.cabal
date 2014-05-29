@@ -41,6 +41,14 @@ extra-source-files:
   README.md
   examples/CommandT.hs
 
+source-repository head
+  type:              git
+  location:          https://github.com/biegunka/command-qq
+
+source-repository this
+  type:              git
+  location:          https://github.com/biegunka/command-qq
+  tag:               0.2.1.0
 
 library
   default-language:  Haskell2010
@@ -81,8 +89,3 @@ test-suite spec
   other-modules:
     System.Command.QQ.EmbedSpec
     System.Command.QQ.EvalSpec
-
-
-source-repository head
-  type:              git
-  location:          https://github.com/biegunka/command-qq
