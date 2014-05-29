@@ -6,11 +6,13 @@ module System.Command.QQ.Embed
   ( Embed(..)
   ) where
 
-import Control.Applicative
-import Data.Int
-import Data.Ratio (Ratio)
-import Data.Word
-import Foreign.C.Types
+import           Control.Applicative
+import           Data.Int
+import           Data.Ratio (Ratio)
+import qualified Data.Text as Text
+import qualified Data.Text.Lazy as Text.Lazy
+import           Data.Word
+import           Foreign.C.Types
 
 -- $setup
 -- >>> import Data.Ratio
@@ -72,7 +74,19 @@ instance Embed Char where
   embed = pure
 
 -- |
--- >>> embed "hi"
+-- >>> embed ("hi" :: String)
 -- "hi"
 instance Embed String where
   embed = id
+
+-- |
+-- >>> embed ("hi" :: Text.Text)
+-- "hi"
+instance Embed Text.Text where
+  embed = Text.unpack
+
+-- |
+-- >>> embed ("hi" :: Text.Lazy.Text)
+-- "hi"
+instance Embed Text.Lazy.Text where
+  embed = Text.Lazy.unpack
