@@ -14,7 +14,7 @@ import Control.Applicative                         -- base
 import Control.Monad (MonadPlus(..))               -- base
 import Control.Monad.IO.Class (MonadIO(..))        -- transformers
 import Control.Monad.Trans.Class (MonadTrans(..))  -- transformers
-import Control.Monad.Trans.Either                  -- either
+import Control.Monad.Trans.Except                  -- transformers
 import Data.Monoid (Last(..))                      -- base
 import Data.Text.Lazy (Text)                       -- text
 import System.Exit (ExitCode(..))                  -- base
@@ -49,7 +49,7 @@ infixl 1 >>! -- same as >>=
 --
 -- >>> do Left (Last (Just (Failure _ i _))) <- runCommandT $ [sh|exit 1|] <|> [sh|exit 3|]; print i
 -- 3
-newtype CommandT m a = CommandT { unCommandT :: EitherT (Last Failure) m a }
+newtype CommandT m a = CommandT { unCommandT :: ExceptT (Last Failure) m a }
 
 -- | Failed command with exit code and @stderr@
 data Failure = Failure Command Int Text
@@ -61,42 +61,42 @@ data Command = Command String [String]
 
 -- | Run external commands and get the result
 runCommandT :: CommandT m a -> m (Either (Last Failure) a)
-runCommandT = runEitherT . unCommandT
+runCommandT = runExceptT . unCommandT
 
-instance Monad m => Functor (CommandT m) where
+instance (Functor m, Monad m) => Functor (CommandT m) where
   fmap f (CommandT x) = CommandT (fmap f x)
 
-instance Monad m => Applicative (CommandT m) where
+instance (Functor m, Monad m) => Applicative (CommandT m) where
   pure = CommandT . pure
   CommandT f <*> CommandT x = CommandT (f <*> x)
 
-instance Monad m => Monad (CommandT m) where
+instance (Functor m, Monad m) => Monad (CommandT m) where
   return = pure
   CommandT x >>= k = CommandT (x >>= unCommandT . k)
 
-instance Monad m => Alternative (CommandT m) where
+instance (Functor m, Monad m) => Alternative (CommandT m) where
   empty = CommandT empty
   CommandT f <|> CommandT x = CommandT (f <|> x)
 
-instance Monad m => MonadPlus (CommandT m) where
+instance (Functor m, Monad m) => MonadPlus (CommandT m) where
   mzero = empty
   mplus = (<|>)
 
 instance MonadTrans CommandT where
   lift = CommandT . lift
 
-instance MonadIO m => MonadIO (CommandT m) where
+instance (Functor m, MonadIO m) => MonadIO (CommandT m) where
   liftIO = lift . liftIO
 
 instance (o ~ Text, MonadIO m) => Eval (CommandT m o) where
-  eval command args = CommandT . EitherT $ do
+  eval command args = CommandT . ExceptT $ do
     (status, out, err) <- liftIO $ eval command args
     return $ case status of
       ExitSuccess   -> Right out
       ExitFailure i -> Left (Last (Just (Failure (Command command args) i err)))
 
 instance (i ~ Text, o ~ Text, MonadIO m) => Eval (i -> CommandT m o) where
-  eval command args input = CommandT . EitherT $ do
+  eval command args input = CommandT . ExceptT $ do
     (status, out, err) <- liftIO $ eval command args input
     return $ case status of
       ExitSuccess   -> Right out
@@ -120,7 +120,7 @@ instance (i ~ Text, o ~ Text, MonadIO m) => Eval (i -> CommandT m o) where
 -- >>> runCommandT $ [sh|echo -e "hello\nworld!!!">&2; exit 1|] >>! lengths . T.unlines . reverse . T.lines
 -- Right "8\n5\n"
 (>>!) :: Monad m => CommandT m a -> (Text -> CommandT m b) -> CommandT m b
-x >>! k = CommandT . EitherT $ do
+x >>! k = CommandT . ExceptT $ do
   t <- runCommandT x
   case t of
     Left (Last Nothing) -> return (Left (Last Nothing))

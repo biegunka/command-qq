@@ -2,5 +2,5 @@ language: haskell
 
 before_install:
  - sudo apt-get update
- - sudo apt-get install zsh python3                # tests dependencies
- - cabal install either semigroupoids transformers # examples dependencies
+ - sudo apt-get install zsh python3
+ - cabal install transformers --constraint='transformers >= 0.4'
