@@ -6,11 +6,15 @@
 module System.Command.QQ
   ( -- * Quasiquoters
     -- ** Default shell
-    sh_, sh
+    sh_
+  , sh
     -- ** Constructors
-  , shell, interpreter
+  , shell
+  , interpreter
     -- * Customizations
-  , quoter, callCommand
+  , quoter
+  , callCommand
+  , substituteVars
   , module System.Command.QQ.Embed
   , module System.Command.QQ.Eval
   ) where
@@ -96,7 +100,7 @@ interpreter path = quoter (callCommand path ["-e"])
 -- and producing Haskell expression.
 --
 -- Other kinds of quasiquoters (patterns, types or
--- declarations quasiquoters) will fail in compile time
+-- declarations quasiquoters) will fail at compile time
 quoter :: (String -> Q Exp) -> QuasiQuoter
 quoter quote = QuasiQuoter
   { quoteExp  = quote
@@ -115,7 +119,7 @@ callCommand
   -> String   -- ^ Quasiquoter contents
   -> Q Exp
 callCommand path args string =
-  [e| eval path (args ++ [$(string2exp string)]) |]
+  [e| eval path (args ++ [$(substituteVars string)]) |]
 
 -- | Construct Haskell expression for external command call
 callCommand_
@@ -124,11 +128,12 @@ callCommand_
   -> String   -- ^ Quasiquoter contents
   -> Q Exp
 callCommand_ path args string =
-  [e| eval path (args ++ [$(string2exp string)]) :: IO () |]
+  [e| eval path (args ++ [$(substituteVars string)]) :: IO () |]
 
--- | Parse references to Haskell variables
-string2exp :: String -> Q Exp
-string2exp = raw where
+-- | Construct Haskell expression from the string, substituting variables
+-- for their values. Variable expansion uses a ruby-like syntax
+substituteVars :: String -> Q Exp
+substituteVars = raw where
   raw, var :: String -> Q Exp
   raw (break (== '#') -> parts) = case parts of
     (before, '#':'{' :after) -> [e| before ++ $(var after) |]
@@ -140,7 +145,6 @@ string2exp = raw where
   var (break (== '}') -> parts) = case parts of
      (b:efore, '}':after)
         | isLower b                    -> external (VarE (mkName (b:efore))) after
-        | isUpper b                    -> external (ConE (mkName (b:efore))) after
         | isUpper b                    -> external (ConE (mkName (b:efore))) after
         | Just i <- readMaybe (b:efore) -> external (LitE (IntegerL i)) after
         | Just d <- readMaybe (b:efore) -> external (LitE (RationalL (toRational (d :: Double)))) after

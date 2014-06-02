@@ -1,9 +1,14 @@
+0.2.2.0
+=======
+
+  * Exported `substituteVars`
+
 0.2.1.0
 =======
 
-  * Add a bunch of predefined quasiquoters to `System.Command.QQ.Predef`
+  * Added a bunch of predefined quasiquoters to `System.Command.QQ.Predef`
 
-  * Add `Embed` instances for `Data.Text.Text` and `Data.Text.Lazy.Text`
+  * Added `Embed` instances for `Data.Text.Text` and `Data.Text.Lazy.Text`
 
 0.2.0.0
 =======
@@ -12,6 +17,6 @@
 
   * Moved `Eval` onto `Text` to speed I/O up.
 
-  * Quasiquoters support literals and constructors with no arguments
+  * Added support for embedding literals and constructors with no arguments
 
-  * More `Embed` instances
+  * Mored `Embed` instances
