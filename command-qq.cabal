@@ -39,7 +39,7 @@ cabal-version:       >= 1.10
 extra-source-files:
   CHANGELOG.md
   README.md
-  examples/CommandT.hs
+  example/CommandT.hs
 
 source-repository head
   type:              git
