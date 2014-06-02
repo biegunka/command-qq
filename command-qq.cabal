@@ -84,7 +84,7 @@ test-suite spec
     , text
   hs-source-dirs:
       test
-    , examples
+    , example
   main-is:           Spec.hs
   other-modules:
     System.Command.QQ.EmbedSpec

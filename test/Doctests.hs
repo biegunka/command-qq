@@ -9,5 +9,5 @@ main = doctest
   , "src/System/Command/QQ/Embed.hs"
   , "src/System/Command/QQ/Eval.hs"
   , "src/System/Command/QQ/Predef.hs"
-  , "examples/CommandT.hs"
+  , "example/CommandT.hs"
   ]
