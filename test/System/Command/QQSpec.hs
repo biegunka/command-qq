@@ -23,3 +23,15 @@ spec = do
     it "leaves an escape hatch for typing literal #{} in" $ do
       let foo = "or"
       $(substituteVars "hello#\\{foo}bye!") `shouldBe` "hello#{foo}bye!"
+
+    it "escape hatch can be escaped" $ do
+      let foo = "or"
+      $(substituteVars "hello#\\\\{foo}bye!") `shouldBe` "hello#\\{foo}bye!"
+
+    it "leaves another (possibly more natural) escape hatch for typing literal #{} in" $ do
+      let foo = "or"
+      $(substituteVars "hello\\#{foo}bye!") `shouldBe` "hello#{foo}bye!"
+
+    it "another escape hatch can be escaped too" $ do
+      let foo = "or"
+      $(substituteVars "hello\\\\#{foo}bye!") `shouldBe` "hello\\orbye!"

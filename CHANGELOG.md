@@ -1,3 +1,8 @@
+0.3.0.0
+=======
+
+  * Added another way to avoid variable expansion (`\\#{foo}` is replaced with `#{foo}`)
+
 0.2.2.0
 =======
 

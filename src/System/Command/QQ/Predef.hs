@@ -17,12 +17,9 @@ zsh = shell "zsh"
 awk :: QuasiQuoter
 awk = quoter $ callCommand "awk" []
 
-
 -- | @ghci@ interpreter
 ghci :: QuasiQuoter
-ghci =
-  quoter $ callCommand "ghc" ["-ignore-dot-ghci", "-e"]
-
+ghci = quoter $ callCommand "ghc" ["-ignore-dot-ghci", "-e"]
 
 -- | @perl@ interpreter
 perl :: QuasiQuoter
@@ -31,7 +28,6 @@ perl = interpreter "perl"
 -- | @ruby@ interpreter
 ruby :: QuasiQuoter
 ruby = interpreter "ruby"
-
 
 -- | @python@ interpreter
 python :: QuasiQuoter
