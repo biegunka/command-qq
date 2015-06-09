@@ -19,16 +19,16 @@ module System.Command.QQ
   , module System.Command.QQ.Eval
   ) where
 
-import Control.Applicative
-import Data.Char (isLower, isUpper)
-import Data.Maybe (fromMaybe)
-import Language.Haskell.TH
-import Language.Haskell.TH.Quote
-import System.Environment (lookupEnv)
-import Text.Read (readMaybe)
+import           Data.Char (isLower, isUpper)
+import           Data.Maybe (fromMaybe)
+import           Language.Haskell.TH (Q, Exp)
+import qualified Language.Haskell.TH as TH
+import           Language.Haskell.TH.Quote (QuasiQuoter(..))
+import           System.Environment (lookupEnv)
+import           Text.Read (readMaybe)
 
-import System.Command.QQ.Embed
-import System.Command.QQ.Eval
+import           System.Command.QQ.Embed
+import           System.Command.QQ.Eval
 
 -- $setup
 -- >>> :set -XQuasiQuotes
@@ -56,7 +56,7 @@ import System.Command.QQ.Eval
 -- "7 apples!\n"
 sh :: QuasiQuoter
 sh = quoter $ \string -> do
-  shellEx <- runIO $ getEnvDefault "/bin/sh" "SHELL"
+  shellEx <- TH.runIO (getEnvDefault "/bin/sh" "SHELL")
   callCommand shellEx ["-c"] string
 
 -- | Simple quasiquoter for the default shell
@@ -68,7 +68,7 @@ sh = quoter $ \string -> do
 -- hello, world!
 sh_ :: QuasiQuoter
 sh_ = quoter $ \string -> do
-  shellEx <- runIO $ getEnvDefault "/bin/sh" "SHELL"
+  shellEx <- TH.runIO (getEnvDefault "/bin/sh" "SHELL")
   callCommand_ shellEx ["-c"] string
 
 -- | Shell's quasiquoter constructor
@@ -110,7 +110,7 @@ quoter quote = QuasiQuoter
   }
  where
   failure kind =
-    fail $ "this quasiquoter does not support splicing " ++ kind
+    fail ("this quasiquoter does not support splicing " ++ kind)
 
 -- | Construct Haskell expression for external command call
 callCommand
@@ -146,14 +146,14 @@ substituteVars = raw where
       _                            -> fail "Should never happen"
 
   var (break (== '}') -> parts) = case parts of
-     (b : efore, '}' : after)
-        | isLower b                     -> external (VarE (mkName (b:efore))) after
-        | isUpper b                     -> external (ConE (mkName (b:efore))) after
-        | Just i <- readMaybe (b:efore) -> external (LitE (IntegerL i)) after
-        | Just d <- readMaybe (b:efore) -> external (LitE (RationalL (toRational (d :: Double)))) after
-        | Just c <- readMaybe (b:efore) -> external (LitE (CharL c)) after
-        | Just s <- readMaybe (b:efore) -> external (LitE (StringL s)) after
-     (before, _)                        -> fail $ "Invalid name: " ++ before
+    (b : efore, '}' : after)
+      | isLower b                     -> external (TH.VarE (TH.mkName (b:efore))) after
+      | isUpper b                     -> external (TH.ConE (TH.mkName (b:efore))) after
+      | Just i <- readMaybe (b:efore) -> external (TH.LitE (TH.IntegerL i)) after
+      | Just d <- readMaybe (b:efore) -> external (TH.LitE (TH.RationalL (toRational (d :: Double)))) after
+      | Just c <- readMaybe (b:efore) -> external (TH.LitE (TH.CharL c)) after
+      | Just s <- readMaybe (b:efore) -> external (TH.LitE (TH.StringL s)) after
+    (before, _)                        -> fail ("Invalid name: " ++ before)
 
   external :: Exp -> String -> Q Exp
   external e after = [e| embed $(return e) ++ $(raw after) |]
@@ -163,4 +163,4 @@ getEnvDefault
   :: String -- ^ The default vefault
   -> String -- ^ Environment variable
   -> IO String
-getEnvDefault def query = fromMaybe def <$> lookupEnv query
+getEnvDefault def = fmap (fromMaybe def) . lookupEnv

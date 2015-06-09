@@ -5,13 +5,12 @@ module System.Command.QQ.Eval
   ( Eval(..)
   ) where
 
-import           Control.Applicative
 import           Control.Concurrent
 import           Control.Exception (evaluate)
 import           Control.Monad
 import           Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy as T
-import qualified Data.Text.Lazy.IO as T
+import qualified Data.Text.Lazy as Text
+import qualified Data.Text.Lazy.IO as Text
 import           System.Exit (ExitCode)
 import qualified System.Process as P
 import           System.IO (hFlush, hClose)
@@ -33,7 +32,7 @@ class Eval r where
 -- >>> [sh|echo hello world|] :: IO ()
 -- hello world
 instance Eval (IO ()) where
-  eval command args = () <$ P.rawSystem command args
+  eval command = void . P.rawSystem command
 
 -- | Return exit code of the external process
 --
@@ -44,7 +43,7 @@ instance Eval (IO ()) where
 -- ExitFailure 7
 instance Eval (IO ExitCode) where
   eval command args = do
-    (s, _, _) <- eval command args (T.pack "")
+    (s, _, _) <- eval command args Text.empty
     return s
 
 -- | Return stdout of the external process as 'Text'
@@ -65,7 +64,7 @@ instance Eval (IO Text) where
 -- >>> [sh|echo -n hello world|] :: IO String
 -- "hello world"
 instance Eval (IO String) where
-  eval command args = T.unpack <$> eval command args
+  eval command = fmap Text.unpack . eval command
 
 -- | Return exit code, stdout, and stderr of external process
 --
@@ -76,7 +75,7 @@ instance
   , o ~ Text
   , e ~ Text
   ) => Eval (IO (s, o, e)) where
-  eval command args = eval command args (T.pack "")
+  eval command args = eval command args Text.empty
 
 -- | Return exit code, stdout, and stderr of the external process
 -- and pass supplied 'Text' to its stdin
@@ -99,14 +98,14 @@ readProcessWithExitCode cmd args input = do
         }
 
   var <- newEmptyMVar
-  out <- T.hGetContents outh
-  err <- T.hGetContents errh
+  out <- Text.hGetContents outh
+  err <- Text.hGetContents errh
 
-  forkFinally (evaluate (T.length out)) (\_ -> putMVar var ())
-  forkFinally (evaluate (T.length err)) (\_ -> putMVar var ())
+  forkFinally (evaluate (Text.length out)) (\_ -> putMVar var ())
+  forkFinally (evaluate (Text.length err)) (\_ -> putMVar var ())
 
-  unless (T.null input) $
-    T.hPutStr inh input >> hFlush inh
+  unless (Text.null input) $
+    Text.hPutStr inh input >> hFlush inh
   hClose inh
 
   takeMVar var

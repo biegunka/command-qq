@@ -6,7 +6,6 @@ module System.Command.QQ.Embed
   ( Embed(..)
   ) where
 
-import           Control.Applicative
 import           Data.Int
 import           Data.Ratio (Ratio)
 import qualified Data.Text as Text
@@ -71,7 +70,7 @@ instance a ~ Integer => Embed (Ratio a) where
 -- >>> embed 'c'
 -- "c"
 instance Embed Char where
-  embed = pure
+  embed x = [x]
 
 -- |
 -- >>> embed ("hi" :: String)

@@ -5,6 +5,7 @@ import Language.Haskell.TH.Quote (QuasiQuoter)
 
 import System.Command.QQ (interpreter, shell, quoter, callCommand)
 
+
 -- | @bash@ shell
 bash :: QuasiQuoter
 bash = shell "bash"
@@ -15,11 +16,11 @@ zsh = shell "zsh"
 
 -- | @awk@ interpreter
 awk :: QuasiQuoter
-awk = quoter $ callCommand "awk" []
+awk = quoter (callCommand "awk" [])
 
 -- | @ghci@ interpreter
 ghci :: QuasiQuoter
-ghci = quoter $ callCommand "ghc" ["-ignore-dot-ghci", "-e"]
+ghci = quoter (callCommand "ghc" ["-ignore-dot-ghci", "-e"])
 
 -- | @perl@ interpreter
 perl :: QuasiQuoter
