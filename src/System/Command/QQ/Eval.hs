@@ -6,8 +6,9 @@ module System.Command.QQ.Eval
   ) where
 
 import           Control.Concurrent
-import           Control.Exception (evaluate)
+import           Control.Exception (evaluate, mask, onException)
 import           Control.Monad
+import           Data.Foldable (traverse_)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as Text
 import qualified Data.Text.Lazy.IO as Text
@@ -89,30 +90,36 @@ instance
   eval = readProcessWithExitCode
 
 readProcessWithExitCode :: String -> [String] -> Text -> IO (ExitCode, Text, Text)
-readProcessWithExitCode cmd args input = do
-  (Just inh, Just outh, Just errh, p) <-
-      P.createProcess (P.proc cmd args)
-        { P.std_in  = P.CreatePipe
-        , P.std_out = P.CreatePipe
-        , P.std_err = P.CreatePipe
-        }
+readProcessWithExitCode cmd args input =
+  mask $ \restore -> do
+    (Just inh, Just outh, Just errh, pid) <-
+        P.createProcess (P.proc cmd args)
+          { P.std_in  = P.CreatePipe
+          , P.std_out = P.CreatePipe
+          , P.std_err = P.CreatePipe
+          }
 
-  var <- newEmptyMVar
-  out <- Text.hGetContents outh
-  err <- Text.hGetContents errh
+    onException
+      (restore $ do
+        var <- newEmptyMVar
+        out <- Text.hGetContents outh
+        err <- Text.hGetContents errh
 
-  forkFinally (evaluate (Text.length out)) (\_ -> putMVar var ())
-  forkFinally (evaluate (Text.length err)) (\_ -> putMVar var ())
+        forkFinally (evaluate (Text.length out)) (\_ -> putMVar var ())
+        forkFinally (evaluate (Text.length err)) (\_ -> putMVar var ())
 
-  unless (Text.null input) $
-    Text.hPutStr inh input >> hFlush inh
-  hClose inh
+        unless (Text.null input) $
+          Text.hPutStr inh input >> hFlush inh
+        hClose inh
 
-  takeMVar var
-  takeMVar var
-  hClose outh
-  hClose errh
+        takeMVar var
+        takeMVar var
+        hClose outh
+        hClose errh
 
-  s <- P.waitForProcess p
+        s <- P.waitForProcess pid
 
-  return (s, out, err)
+        return (s, out, err))
+      (do P.terminateProcess pid
+          traverse_ hClose [inh, outh, errh]
+          P.waitForProcess pid)
