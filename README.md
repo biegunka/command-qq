@@ -74,4 +74,4 @@ only variables/constructors names and literals
 See [`examples/CommandT.hs`][1]
 
   [0]: https://github.com/biegunka/command-qq/blob/master/src/System/Command/QQ/Predef.hs
-  [1]: https://github.com/biegunka/command-qq/blob/master/examples/CommandT.hs
+  [1]: https://github.com/biegunka/command-qq/blob/master/example/CommandT.hs
