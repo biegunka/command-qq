@@ -29,7 +29,7 @@ description:
     See @examples/CommandT.hs@
   .
 homepage:            http://biegunka.github.io/command-qq/
-license:             BSD3
+license:             BSD2
 license-file:        LICENSE
 author:              Matvey Aksenov
 maintainer:          matvey.aksenov@gmail.com
