@@ -110,7 +110,7 @@ quoter quote = QuasiQuoter
   }
  where
   failure kind =
-    fail ("this quasiquoter does not support splicing " ++ kind)
+    error ("this quasiquoter does not support splicing " ++ kind)
 
 -- | Construct Haskell expression for external command call
 callCommand
