@@ -1,3 +1,12 @@
+0.3.1.0
+=======
+
+  * Improved exception handling
+
+  * Relaxed the licesnse to BSD2
+
+  * Made compatible with GHC 8.8
+
 0.3.0.0
 =======
 
